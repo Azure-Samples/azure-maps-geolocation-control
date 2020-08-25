@@ -11,7 +11,9 @@ products:
 
 # Azure Maps Animation module
 
-An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map.
+An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map. This control uses the browsers [geolocaiton API](https://www.w3schools.com/html/html5_geolocation.asp) to locate the user and show their position on a map. 
+
+Note that not all devices support geolocation and some users may choose not to share their location. Due to the sensitive and private nature of user locaiton data, many modern browsers require sites to be served over HTTPS in order to access the geolocation API. If the browser or device does not support getting the user location, the geolocation control will not appear on the map. 
 
 [Geolocation control](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
 <br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control.png" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
@@ -107,6 +109,7 @@ Options for the GeolocationControl.
 | `showUserLocation` | `boolean` | Shows the users location on the map using a marker. Default: `true` |
 | `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light'. |
 | `trackUserLocation` | `boolean` | If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` |
+| `updateMapCamera` | `boolean` | Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` |
 
 ### GeolocationProperties interface
 

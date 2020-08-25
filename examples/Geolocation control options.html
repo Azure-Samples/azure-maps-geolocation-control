@@ -56,6 +56,7 @@
                 style: getSelectValue('style'),
                 showUserLocation: document.getElementById('showUserLocation').checked,
                 trackUserLocation: document.getElementById('trackUserLocation').checked,
+                updateMapCamera: document.getElementById('updateMapCamera').checked,
                 markerColor: document.getElementById('markerColor').value,
                 positionOption: {
                     enableHighAccuracy: document.getElementById('enableHighAccuracy').checked,
@@ -176,6 +177,10 @@
                     <td>Calculate missing values:</td>
                     <td><input id="calculateMissingValues" type="checkbox" onclick="update()" /></td>
                 </tr>
+                <tr title="Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map.">
+                    <td>Update map camera:</td>
+                    <td><input id="updateMapCamera" type="checkbox" checked="checked" onclick="update()" /></td>
+                </tr>                
                 <tr title="Sets the color of the marker.">
                     <td>Marker color:</td>
                     <td><input id="markerColor" type="color" value="#1e90ff" onchange="update()" /></td>

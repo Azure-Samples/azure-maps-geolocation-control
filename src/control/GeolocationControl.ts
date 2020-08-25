@@ -32,7 +32,8 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         trackUserLocation: false,
         markerColor: 'DodgerBlue',
         maxZoom: 15,
-        calculateMissingValues: false
+        calculateMissingValues: false,
+        updateMapCamera: true
     };
     private _darkColor = '#011c2c';
     private _hclStyle:azmaps.ControlStyle = null;
@@ -96,6 +97,11 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
             if (typeof options.calculateMissingValues === 'boolean') {
                 this._options.calculateMissingValues = options.calculateMissingValues;
+            }            
+
+            if (typeof options.updateMapCamera === 'boolean') {
+                this._options.updateMapCamera = options.updateMapCamera;
+                this._updateMapCamera = options.updateMapCamera;
             }
         }
     }
@@ -174,7 +180,10 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 //@ts-ignore
                 this._invokeEvent('geolocationerror', {
                     code: 2,
-                    message: 'Geolocation API not supported by device.'
+                    message: 'Geolocation API not supported by device.',
+                    PERMISSION_DENIED: 1,
+                    POSITION_UNAVAILABLE: 2,
+                    TIMEOUT: 3
                 });
             }
         });
@@ -271,6 +280,11 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 this._options.calculateMissingValues = options.calculateMissingValues;
             }
 
+            if (typeof options.updateMapCamera === 'boolean') {
+                this._options.updateMapCamera = options.updateMapCamera;
+                this._updateMapCamera = options.updateMapCamera;
+            }
+
             if (typeof options.showUserLocation === 'boolean') {
                 this._options.showUserLocation = options.showUserLocation;
 
@@ -315,14 +329,14 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Toggles the state of the Geolocation control button. If a boolean state is not passed in, will toggle to opposite of current state. 
      * @param isActive The state to toggle to. If not specified, will toggle to opposite of current state.
      */
-    public toggle(isActive?: boolean): void {
+    public toggle(isActive?: boolean): void {        
         this._isActive = (typeof isActive === 'boolean') ? isActive : !this._isActive;
-
+        
         if (this._isActive && this._options.trackUserLocation && this._lastKnownPosition) {
             this._onGpsSuccess();
         }
 
-        this._updateMapCamera = true;
+        this._updateMapCamera = this._options.updateMapCamera;
         this._updateState();
     }
 
@@ -346,9 +360,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
     /** Toggles the state of the control. */
     private _toggleBtn = () => {
-        this._isActive = !this._isActive;
-        this._updateMapCamera = true;
-        this._updateState();
+        this.toggle();
     };
 
     /**

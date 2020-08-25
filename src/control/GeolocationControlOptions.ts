@@ -2,22 +2,9 @@ import * as azmaps from "azure-maps-control";
 
 /** Options for the GeolocationControl. */
 export interface GeolocationControlOptions {
-    /**
-    * The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style.
-    * Overridden if device is in high contrast mode.
-    * Default `light'.
-    * @default light
-    */
-    style?: azmaps.ControlStyle | string;
 
-    /** A Geolocation API PositionOptions object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` */
-    positionOptions?: PositionOptions;
-
-    /** Shows the users location on the map using a marker. Default: `true` */
-    showUserLocation?: boolean;
-
-    /** If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` */
-    trackUserLocation?: boolean;
+    /** Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` */
+    calculateMissingValues?: boolean;
 
     /** The color of the user location marker. Default: `DodgerBlue` */
     markerColor?: string;
@@ -30,6 +17,23 @@ export interface GeolocationControlOptions {
      **/
     maxZoom?: number;
 
-    /** Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` */
-    calculateMissingValues?: boolean;
+    /** A Geolocation API PositionOptions object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` */
+    positionOptions?: PositionOptions;
+
+    /** Shows the users location on the map using a marker. Default: `true` */
+    showUserLocation?: boolean;
+    
+    /**
+    * The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style.
+    * Overridden if device is in high contrast mode.
+    * Default `light'.
+    * @default light
+    */
+    style?: azmaps.ControlStyle | string;
+
+    /** If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` */
+    trackUserLocation?: boolean;
+
+    /** Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` */
+    updateMapCamera?: boolean;
 }

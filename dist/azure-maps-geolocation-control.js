@@ -186,7 +186,8 @@ MIT License
                 trackUserLocation: false,
                 markerColor: 'DodgerBlue',
                 maxZoom: 15,
-                calculateMissingValues: false
+                calculateMissingValues: false,
+                updateMapCamera: true
             };
             _this._darkColor = '#011c2c';
             _this._hclStyle = null;
@@ -206,9 +207,7 @@ MIT License
              ***************************/
             /** Toggles the state of the control. */
             _this._toggleBtn = function () {
-                _this._isActive = !_this._isActive;
-                _this._updateMapCamera = true;
-                _this._updateState();
+                _this.toggle();
             };
             /**
              * An event handler for when the map style changes. Used when control style is set to auto.
@@ -324,6 +323,10 @@ MIT License
                 }
                 if (typeof options.calculateMissingValues === 'boolean') {
                     _this._options.calculateMissingValues = options.calculateMissingValues;
+                }
+                if (typeof options.updateMapCamera === 'boolean') {
+                    _this._options.updateMapCamera = options.updateMapCamera;
+                    _this._updateMapCamera = options.updateMapCamera;
                 }
             }
             return _this;
@@ -467,6 +470,10 @@ MIT License
                 if (typeof options.calculateMissingValues === 'boolean') {
                     this._options.calculateMissingValues = options.calculateMissingValues;
                 }
+                if (typeof options.updateMapCamera === 'boolean') {
+                    this._options.updateMapCamera = options.updateMapCamera;
+                    this._updateMapCamera = options.updateMapCamera;
+                }
                 if (typeof options.showUserLocation === 'boolean') {
                     this._options.showUserLocation = options.showUserLocation;
                     if (this._gpsMarker) {
@@ -509,7 +516,7 @@ MIT License
             if (this._isActive && this._options.trackUserLocation && this._lastKnownPosition) {
                 this._onGpsSuccess();
             }
-            this._updateMapCamera = true;
+            this._updateMapCamera = this._options.updateMapCamera;
             this._updateState();
         };
         /** Checks to see if the geolocation API is supported in the browser. */
