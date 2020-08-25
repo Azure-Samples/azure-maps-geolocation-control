@@ -11,9 +11,11 @@ products:
 
 # Azure Maps Geolocation Control module
 
-An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map. This control uses the browsers [geolocaiton API](https://www.w3schools.com/html/html5_geolocation.asp) to locate the user and show their position on a map. 
+An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map. This control uses the browsers [geolocation API](https://www.w3schools.com/html/html5_geolocation.asp) to locate the user and show their position on a map. 
 
 Note that not all devices support geolocation and some users may choose not to share their location. Due to the sensitive and private nature of user locaiton data, many modern browsers require sites to be served over HTTPS in order to access the geolocation API. If the browser or device does not support getting the user location, the geolocation control will not appear on the map. 
+
+**Samples**
 
 [Geolocation control](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
 <br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control.png" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
