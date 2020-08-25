@@ -1,13 +1,10 @@
-## [project-title] Changelog
+## azure-maps-geolocation-control Changelog
 
-<a name="x.y.z"></a>
-# x.y.z (yyyy-mm-dd)
+<a name="0.0.1"></a>
+# 0.0.1 (2020-08-21)
 
-*Features*
-* ...
+**Features**
 
-*Bug Fixes*
-* ...
+- Control for getting the users position.
+- Ability to track the users position.
 
-*Breaking Changes*
-* ...
