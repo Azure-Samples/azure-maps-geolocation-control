@@ -9,7 +9,7 @@ products:
 - azure-maps
 ---
 
-# Azure Maps Animation module
+# Azure Maps Geolocation Control module
 
 An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map. This control uses the browsers [geolocaiton API](https://www.w3schools.com/html/html5_geolocation.asp) to locate the user and show their position on a map. 
 
