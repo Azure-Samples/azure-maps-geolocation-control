@@ -27,8 +27,6 @@ Note that not all devices support geolocation and some users may choose not to s
 
 Download the project and copy the `azure-maps-geolocation-control` JavaScript file from the `dist` folder into your project. 
 
-See the [documentation](https://github.com/Azure-Samples/azure-maps-geolocation-control/tree/main/docs) for more details on a specific feature or take a look at one of the samples:
-
 **Usage**
 
 ```JavaScript
@@ -109,7 +107,7 @@ Options for the GeolocationControl.
 | `maxZoom` | `number` | The maximum zoom level the map can be zoomed out. If zoomed out more than this when location updates, the map will zoom into this level. If zoomed in more than this level, the map will maintain its current zoom level. Default: `15` |
 | `positionOptions` | `PositionOptions` | A [Geolocation API PositionOptions](https://w3c.github.io/geolocation-api/#position_options_interface) object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` |
 | `showUserLocation` | `boolean` | Shows the users location on the map using a marker. Default: `true` |
-| `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light'. |
+| `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light`. |
 | `trackUserLocation` | `boolean` | If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` |
 | `updateMapCamera` | `boolean` | Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` |
 
@@ -136,6 +134,7 @@ Properties of returned for a geolocation point.
 **Open Azure Maps Web SDK modules**
 
 * [Azure Maps Animation module](https://github.com/Azure-Samples/azure-maps-animations)
+* [Azure Maps Fullscreen Control module](https://github.com/Azure-Samples/azure-maps-fullscreen-control)
 * [Azure Maps Sync Map module](https://github.com/Azure-Samples/azure-maps-sync-maps)
 * [Azure Maps Services UI module](https://github.com/Azure-Samples/azure-maps-services-ui)
 

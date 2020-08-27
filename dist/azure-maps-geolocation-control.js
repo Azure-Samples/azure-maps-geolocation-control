@@ -193,15 +193,6 @@ MIT License
             _this._hclStyle = null;
             _this._isActive = false;
             _this._updateMapCamera = true;
-            _this._gpsArrowIcon = '<div style="{transform}"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="translate(2 2)"><polygon points="12,0 0,24 12,17 24,24" stroke-width="2" stroke="white" fill="{color}"/></g></svg></div>';
-            _this._gpsDotIcon = '<div class="azmaps-map-gpsPulseIcon" style="background-color:{color}"></div>';
-            _this._iconTemplate = "data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' x='0' y='0' viewBox='0 0 561 561' xml:space='preserve'><g fill='{color}'><path d='M280.5,178.5c-56.1,0-102,45.9-102,102c0,56.1,45.9,102,102,102c56.1,0,102-45.9,102-102C382.5,224.4,336.6,178.5,280.5,178.5z M507.45,255C494.7,147.9,410.55,63.75,306,53.55V0h-51v53.55C147.9,63.75,63.75,147.9,53.55,255H0v51h53.55C66.3,413.1,150.45,497.25,255,507.45V561h51v-53.55C413.1,494.7,497.25,410.55,507.45,306H561v-51H507.45z M280.5,459C181.05,459,102,379.95,102,280.5S181.05,102,280.5,102S459,181.05,459,280.5S379.95,459,280.5,459z'/></g></svg>";
-            _this._gpsBtnCss = '.azmaps-map-gpsBtn{margin:0;padding:0;border:none;border-collapse:collapse;width:32px;height:32px;text-align:center;cursor:pointer;line-height:32px;background-repeat:no-repeat;background-size:20px;background-position:center center;z-index:200;box-shadow:0px 0px 4px rgba(0,0,0,0.16);}' +
-                '.azmaps-map-gpsDisabled{background-image:url("{grayIcon}");}' +
-                '.azmaps-map-gpsDisabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
-                '.azmaps-map-gpsEnabled{background-image:url("{blueIcon}");}' +
-                '.azmaps-map-gpsEnabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
-                '.azmaps-map-gpsPulseIcon{display:block;width:15px;height:15px;border-radius:50%;background:orange;border:2px solid white;cursor:pointer;box-shadow:0 0 0 rgba(0, 204, 255, 0.6);animation:pulse 2s infinite;}@keyframes pulse {0% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0.6);}70% {box-shadow:0 0 0 20px rgba(0, 204, 255, 0);}100% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0);}}';
             /****************************
              * Private Methods
              ***************************/
@@ -340,8 +331,8 @@ MIT License
             if (this._map) {
                 this._map.controls.remove(this);
             }
-            Object.keys(this).forEach(function (key) {
-                _this[key] = null;
+            Object.keys(this).forEach(function (k) {
+                _this[k] = null;
             });
         };
         /** Get sthe last known position from the geolocation control. */
@@ -360,9 +351,9 @@ MIT License
             this._hclStyle = Utils.getHclStyle(map);
             this._resource = GeolocationControl._getTranslations(this._map.getStyle().language);
             //Create different color icons and merge into CSS.
-            var grayIcon = this._iconTemplate.replace('{color}', 'Gray');
-            var blueIcon = this._iconTemplate.replace('{color}', 'DeepSkyBlue');
-            var css = this._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
+            var grayIcon = GeolocationControl._iconTemplate.replace('{color}', 'Gray');
+            var blueIcon = GeolocationControl._iconTemplate.replace('{color}', 'DeepSkyBlue');
+            var css = GeolocationControl._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
             //Add the CSS style for the control to the DOM.
             var style = document.createElement('style');
             style.innerHTML = css;
@@ -395,7 +386,10 @@ MIT License
                     //@ts-ignore
                     _this._invokeEvent('geolocationerror', {
                         code: 2,
-                        message: 'Geolocation API not supported by device.'
+                        message: 'Geolocation API not supported by device.',
+                        PERMISSION_DENIED: 1,
+                        POSITION_UNAVAILABLE: 2,
+                        TIMEOUT: 3
                     });
                 }
             });
@@ -434,7 +428,7 @@ MIT License
             if (options) {
                 var color = 'white';
                 if (this._hclStyle) {
-                    if (Utils.getAutoStyle(this._map) === azmaps.ControlStyle.dark) {
+                    if (this._hclStyle === 'dark') {
                         color = this._darkColor;
                     }
                 }
@@ -443,7 +437,6 @@ MIT License
                         this._map.events.remove('styledata', this._mapStyleChanged);
                     }
                     this._options.style = options.style;
-                    var color = options.style || 'light';
                     switch (options.style) {
                         case 'dark':
                             color = this._darkColor;
@@ -589,13 +582,13 @@ MIT License
         };
         /** Generates the mark icon HTML */
         GeolocationControl.prototype._getMarkerIcon = function () {
-            var icon = this._gpsDotIcon;
+            var icon = GeolocationControl._gpsDotIcon;
             var h = this._lastKnownPosition.properties.heading;
             if (this._options.trackUserLocation && h !== null && !isNaN(h)) {
                 h = Math.round(h);
                 //TODO: update when markers support rotation.
                 var transform = "-webkit-transform:rotate(" + h + "deg);transform:rotate(" + h + "deg)";
-                icon = this._gpsArrowIcon.replace('{transform}', transform);
+                icon = GeolocationControl._gpsArrowIcon.replace('{transform}', transform);
             }
             return icon;
         };
@@ -732,6 +725,15 @@ MIT License
                     return { enableTracking: 'Start tracking', disableTracking: 'Stop tracking', myLocation: 'My location', title: 'Geolocation control' };
             }
         };
+        GeolocationControl._gpsArrowIcon = '<div style="{transform}"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="translate(2 2)"><polygon points="12,0 0,24 12,17 24,24" stroke-width="2" stroke="white" fill="{color}"/></g></svg></div>';
+        GeolocationControl._gpsDotIcon = '<div class="azmaps-map-gpsPulseIcon" style="background-color:{color}"></div>';
+        GeolocationControl._iconTemplate = "data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' x='0' y='0' viewBox='0 0 561 561' xml:space='preserve'><g fill='{color}'><path d='M280.5,178.5c-56.1,0-102,45.9-102,102c0,56.1,45.9,102,102,102c56.1,0,102-45.9,102-102C382.5,224.4,336.6,178.5,280.5,178.5z M507.45,255C494.7,147.9,410.55,63.75,306,53.55V0h-51v53.55C147.9,63.75,63.75,147.9,53.55,255H0v51h53.55C66.3,413.1,150.45,497.25,255,507.45V561h51v-53.55C413.1,494.7,497.25,410.55,507.45,306H561v-51H507.45z M280.5,459C181.05,459,102,379.95,102,280.5S181.05,102,280.5,102S459,181.05,459,280.5S379.95,459,280.5,459z'/></g></svg>";
+        GeolocationControl._gpsBtnCss = '.azmaps-map-gpsBtn{margin:0;padding:0;border:none;border-collapse:collapse;width:32px;height:32px;text-align:center;cursor:pointer;line-height:32px;background-repeat:no-repeat;background-size:20px;background-position:center center;z-index:200;box-shadow:0px 0px 4px rgba(0,0,0,0.16);}' +
+            '.azmaps-map-gpsDisabled{background-image:url("{grayIcon}");}' +
+            '.azmaps-map-gpsDisabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
+            '.azmaps-map-gpsEnabled{background-image:url("{blueIcon}");}' +
+            '.azmaps-map-gpsEnabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
+            '.azmaps-map-gpsPulseIcon{display:block;width:15px;height:15px;border-radius:50%;background:orange;border:2px solid white;cursor:pointer;box-shadow:0 0 0 rgba(0, 204, 255, 0.6);animation:pulse 2s infinite;}@keyframes pulse {0% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0.6);}70% {box-shadow:0 0 0 20px rgba(0, 204, 255, 0);}100% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0);}}';
         return GeolocationControl;
     }(azmaps.internal.EventEmitter));
 
