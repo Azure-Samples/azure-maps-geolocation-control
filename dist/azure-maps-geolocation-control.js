@@ -126,43 +126,6 @@ MIT License
         return Namespace;
     }());
 
-    var Utils = /** @class */ (function () {
-        function Utils() {
-        }
-        /**
-         * Checks to see if the map is in high contrast mode, and if so, which high contrast style to align with.
-         * @param map The map instance.
-         */
-        Utils.getHclStyle = function (map) {
-            //Check to see if style is high contrast.
-            if (map.getMapContainer().classList.contains("high-contrast-dark")) {
-                return azmaps.ControlStyle.dark;
-            }
-            else if (map.getMapContainer().classList.contains("high-contrast-light")) {
-                return azmaps.ControlStyle.light;
-            }
-            return null;
-        };
-        /**
-         * Gets the control style based on the map style when control style set to auto.
-         * @param map The map instance.
-         */
-        Utils.getAutoStyle = function (map) {
-            switch (map.getStyle().style) {
-                //When the style is dark (i.e. satellite, night), show the dark colored theme.
-                case 'satellite':
-                case 'satellite_road_labels':
-                case 'grayscale_dark':
-                case 'night':
-                case 'night':
-                case 'high_contrast_dark':
-                    return azmaps.ControlStyle.dark;
-            }
-            return azmaps.ControlStyle.light;
-        };
-        return Utils;
-    }());
-
     /** A control that uses the browser's geolocation API to locate the user on the map. */
     var GeolocationControl = /** @class */ (function (_super) {
         __extends(GeolocationControl, _super);
@@ -337,7 +300,7 @@ MIT License
         };
         /** Get sthe last known position from the geolocation control. */
         GeolocationControl.prototype.getLastKnownPosition = function () {
-            return this._lastKnownPosition;
+            return JSON.parse(JSON.stringify(this._lastKnownPosition));
         };
         /**
          * Action to perform when the control is added to the map.
@@ -348,35 +311,44 @@ MIT License
         GeolocationControl.prototype.onAdd = function (map, options) {
             var _this = this;
             this._map = map;
-            this._hclStyle = Utils.getHclStyle(map);
-            this._resource = GeolocationControl._getTranslations(this._map.getStyle().language);
+            var mcl = map.getMapContainer().classList;
+            if (mcl.contains("high-contrast-dark")) {
+                this._hclStyle = 'dark';
+            }
+            else if (mcl.contains("high-contrast-light")) {
+                this._hclStyle = 'light';
+            }
+            this._resource = this._getTranslations(this._map.getStyle().language);
             //Create different color icons and merge into CSS.
-            var grayIcon = GeolocationControl._iconTemplate.replace('{color}', 'Gray');
-            var blueIcon = GeolocationControl._iconTemplate.replace('{color}', 'DeepSkyBlue');
-            var css = GeolocationControl._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
+            var gc = GeolocationControl;
+            var grayIcon = gc._iconTemplate.replace('{color}', 'Gray');
+            var blueIcon = gc._iconTemplate.replace('{color}', 'DeepSkyBlue');
+            var css = gc._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
             //Add the CSS style for the control to the DOM.
             var style = document.createElement('style');
             style.innerHTML = css;
             document.body.appendChild(style);
             //Create the button.
-            this._container = document.createElement('div');
-            this._container.classList.add('azure-maps-control-container');
-            this._container.setAttribute('aria-label', this._resource.title);
-            this._container.style.flexDirection = 'column';
+            var c = document.createElement('div');
+            c.classList.add('azure-maps-control-container');
+            c.setAttribute('aria-label', this._resource[0]);
+            c.style.flexDirection = 'column';
             //Hide the button by default. 
             this._container.style.display = 'none';
-            this._button = document.createElement("button");
-            this._button.classList.add('azmaps-map-gpsBtn');
-            this._button.classList.add('azmaps-map-gpsDisabled');
-            this._button.setAttribute('title', this._resource.enableTracking);
-            this._button.setAttribute('alt', this._resource.enableTracking);
-            this._button.setAttribute('type', 'button');
-            this._button.addEventListener('click', this._toggleBtn);
+            this._container = c;
+            var b = document.createElement("button");
+            b.classList.add('azmaps-map-gpsBtn');
+            b.classList.add('azmaps-map-gpsDisabled');
+            b.setAttribute('title', this._resource[0]);
+            b.setAttribute('alt', this._resource[0]);
+            b.setAttribute('type', 'button');
+            b.addEventListener('click', this._toggleBtn);
+            this._button = b;
             this._updateState();
             this.setOptions(this._options);
-            this._container.appendChild(this._button);
+            c.appendChild(b);
             //Check that geolocation is supported.
-            GeolocationControl.isSupported().then(function (supported) {
+            gc.isSupported().then(function (supported) {
                 if (supported) {
                     //Show the button when we know geolocation is supported.
                     _this._container.style.display = '';
@@ -446,6 +418,8 @@ MIT License
                             this._map.events.add('styledata', this._mapStyleChanged);
                             color = this._getColorFromMapStyle();
                             break;
+                        //case 'light':
+                        //break;
                     }
                 }
                 this._button.style.backgroundColor = color;
@@ -519,8 +493,8 @@ MIT License
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            if (!window.navigator['permissions']) return [3 /*break*/, 2];
-                            return [4 /*yield*/, window.navigator['permissions'].query({ name: 'geolocation' })];
+                            if (!window.navigator.permissions) return [3 /*break*/, 2];
+                            return [4 /*yield*/, window.navigator.permissions.query({ name: 'geolocation' })];
                         case 1:
                             p = _a.sent();
                             return [2 /*return*/, p.state !== 'denied'];
@@ -533,7 +507,11 @@ MIT License
          * Retrieves the background color for the button based on the map style. This is used when style is set to auto.
          */
         GeolocationControl.prototype._getColorFromMapStyle = function () {
-            return Utils.getAutoStyle(this._map) === azmaps.ControlStyle.dark ? this._darkColor : 'white';
+            //When the style is dark (i.e. satellite, night), show the dark colored theme.
+            if (['satellite', 'satellite_road_labels', 'grayscale_dark', 'night'].indexOf(this._map.getStyle().style) > -1) {
+                return this._darkColor;
+            }
+            return 'white';
         };
         /** Removes the geolocation watcher used for tracking. */
         GeolocationControl.prototype._stopTracking = function () {
@@ -554,7 +532,7 @@ MIT License
                     visible: this._isActive && this._options.showUserLocation
                 });
             }
-            var ariaLabel = this._resource.myLocation;
+            var ariaLabel = this._resource[2];
             var removeClass = 'azmaps-map-gpsEnabled';
             var addClass = 'azmaps-map-gpsDisabled';
             if (this._isActive) {
@@ -564,7 +542,7 @@ MIT License
                     if (typeof this._watchId !== 'number') {
                         this._watchId = navigator.geolocation.watchPosition(this._onGpsSuccess, this._onGpsError, this._options.positionOptions);
                     }
-                    ariaLabel = this._resource.disableTracking;
+                    ariaLabel = this._resource[1];
                 }
                 else {
                     navigator.geolocation.getCurrentPosition(this._onGpsSuccess, this._onGpsError, this._options.positionOptions);
@@ -572,7 +550,7 @@ MIT License
             }
             else {
                 if (this._options.trackUserLocation) {
-                    ariaLabel = this._resource.enableTracking;
+                    ariaLabel = this._resource[0];
                 }
             }
             this._button.setAttribute('title', ariaLabel);
@@ -594,136 +572,20 @@ MIT License
         };
         /**
          * Returns the set of translation text resources needed for the control for a given language.
+         * Array values: 0 - enableTracking, 1 - disableTracking, 2 - myLocation, 3 - title
          * @param lang The language code to retrieve the text resources for.
          * @returns An object containing text resources in the specified language.
          */
-        GeolocationControl._getTranslations = function (lang) {
+        GeolocationControl.prototype._getTranslations = function (lang) {
             if (lang && lang.indexOf('-') > 0) {
                 lang = lang.substring(0, lang.indexOf('-'));
             }
-            switch (lang.toLowerCase()) {
-                //Afrikaans
-                case 'af':
-                    return { enableTracking: 'begin dop', disableTracking: 'stop die dop', myLocation: 'my plek', title: 'ligginggewing beheer' };
-                //Arabic
-                case 'ar':
-                    return { enableTracking: 'بدء تتبع', disableTracking: 'تتبع توقف', myLocation: 'موقعي', title: 'السيطرة تحديد الموقع الجغرافي' };
-                //Basque
-                case 'eu':
-                    return { enableTracking: 'Hasi segimendua', disableTracking: 'Stop jarraipena', myLocation: 'Nire kokapena', title: 'Geokokapen kontrol' };
-                //Bulgarian
-                case 'bg':
-                    return { enableTracking: 'Започнете да проследявате', disableTracking: 'Спиране на проследяването', myLocation: 'Моето място', title: 'контрол за геолокация' };
-                //Chinese
-                case 'zh':
-                    return { enableTracking: '开始跟踪', disableTracking: '停止追踪', myLocation: '我的位置', title: '地理位置控制' };
-                //Croatian
-                case 'hr':
-                    return { enableTracking: 'Započnite praćenje', disableTracking: 'zaustavljanje praćenje', myLocation: 'Moja lokacija', title: 'kontrola Geolocation' };
-                //Czech
-                case 'cs':
-                    return { enableTracking: 'začít sledovat', disableTracking: 'Zastavit sledování', myLocation: 'Moje lokace', title: 'ovládání Geolocation' };
-                //Danish
-                case 'da':
-                    return { enableTracking: 'Start sporing', disableTracking: 'Stop sporing', myLocation: 'min placering', title: 'Geolocation kontrol' };
-                //Dutch
-                case 'nl':
-                    return { enableTracking: 'beginnen met het bijhouden', disableTracking: 'stop volgen', myLocation: 'Mijn locatie', title: 'Geolocation controle' };
-                //Estonian
-                case 'et':
-                    return { enableTracking: 'Alusta jälgimist', disableTracking: 'Stopp jälgimise', myLocation: 'Minu asukoht', title: 'Geolocation kontrolli' };
-                //Finnish
-                case 'fi':
-                    return { enableTracking: 'Aloita seuranta', disableTracking: 'Lopeta seuranta', myLocation: 'Minun sijaintini', title: 'Geolocation ohjaus' };
-                //French
-                case 'fr':
-                    return { enableTracking: 'Démarrer le suivi', disableTracking: "suivi d'arrêt", myLocation: 'Ma position', title: 'le contrôle de géolocalisation' };
-                //Galician
-                case 'gl':
-                    return { enableTracking: 'comezar a controlar', disableTracking: 'seguimento parada', myLocation: 'A miña localización', title: 'control de xeolocalización' };
-                //German
-                case 'de':
-                    return { enableTracking: 'starten Sie Tracking', disableTracking: 'Stop-Tracking', myLocation: 'Mein Standort', title: 'Geolokalisierung Steuer' };
-                //Greek
-                case 'el':
-                    return { enableTracking: 'Ξεκινήστε την παρακολούθηση', disableTracking: 'Διακοπή παρακολούθησης', myLocation: 'Η τοποθεσία μου', title: 'ελέγχου geolocation' };
-                //Hindi
-                case 'hi':
-                    return { enableTracking: 'ट्रैक करना शुरू', disableTracking: 'बंद करो ट्रैकिंग', myLocation: 'मेरा स्थान', title: 'जियोलोकेशन नियंत्रण' };
-                //Hungarian
-                case 'hu':
-                    return { enableTracking: 'követés indítása', disableTracking: 'követés leállítása', myLocation: 'Saját hely', title: 'Geolocation ellenőrzés' };
-                //Indonesian
-                case 'id':
-                    return { enableTracking: 'Mulai pelacakan', disableTracking: 'berhenti pelacakan', myLocation: 'Lokasi saya', title: 'kontrol geolocation' };
-                //Italian
-                case 'it':
-                    return { enableTracking: 'Inizia il monitoraggio', disableTracking: 'monitoraggio arresto', myLocation: 'La mia posizione', title: 'controllo geolocalizzazione' };
-                //Japanese
-                case 'ja':
-                    return { enableTracking: '追跡を開始', disableTracking: '追跡を停止', myLocation: '私の場所', title: 'ジオロケーション制御' };
-                //Kazakh
-                case 'kk':
-                    return { enableTracking: 'қадағалау бастау', disableTracking: 'қадағалау тоқтату', myLocation: 'Менің орналасуы', title: 'геоорын бақылау' };
-                //Korean
-                case 'ko':
-                    return { enableTracking: '추적 시작', disableTracking: '정지 추적', myLocation: '내 위치', title: '위치 정보 제어' };
-                //Spanish
-                case 'es':
-                    return { enableTracking: 'iniciar el seguimiento', disableTracking: 'Detener el seguimiento', myLocation: 'Mi ubicacion', title: 'control de geolocalización' };
-                //Latvian
-                case 'lv':
-                    return { enableTracking: 'Sākt izsekošana', disableTracking: 'Stop izsekošana', myLocation: 'Mana atrašanās vieta', title: 'Geolocation kontrole' };
-                //Lithuanian
-                case 'lt':
-                    return { enableTracking: 'pradėti stebėti', disableTracking: 'Sustabdyti sekimo', myLocation: 'Mano vieta', title: 'Geografinė padėtis kontrolė' };
-                //Malay
-                case 'ms':
-                    return { enableTracking: 'mula menjejaki', disableTracking: 'Stop pengesanan', myLocation: 'Lokasi saya', title: 'kawalan geolokasi' };
-                //Norwegian
-                case 'nb':
-                    return { enableTracking: 'begynne å spore', disableTracking: 'stopp sporing', myLocation: 'Min posisjon', title: 'geolocation kontroll' };
-                //Polish
-                case 'pl':
-                    return { enableTracking: 'rozpocząć śledzenie', disableTracking: 'Zatrzymaj śledzenie', myLocation: 'Moja lokacja', title: 'kontrola Geolokalizacja' };
-                //Portuguese
-                case 'pt':
-                    return { enableTracking: 'começar a controlar', disableTracking: 'rastreamento parada', myLocation: 'Minha localização', title: 'controle de geolocalização' };
-                //Romanian
-                case 'ro':
-                    return { enableTracking: 'Pornire urmărire', disableTracking: 'Oprire urmărire', myLocation: 'Locatia mea', title: 'controlul de geolocalizare' };
-                //Russian
-                case 'ru':
-                    return { enableTracking: 'Начать отслеживание', disableTracking: 'остановка отслеживания', myLocation: 'Мое местонахождение', title: 'контроль геолокации' };
-                //Serbian
-                case 'sr':
-                    return { enableTracking: 'Старт трацкинг', disableTracking: 'стоп праћење', myLocation: 'Моја локација', title: 'kontrola геолоцатион' };
-                //Slovak
-                case 'sk':
-                    return { enableTracking: 'začať sledovať', disableTracking: 'zastaviť sledovanie', myLocation: 'moja poloha', title: 'ovládanie Geolocation' };
-                //Slovenian
-                case 'sl':
-                    return { enableTracking: 'Začni sledenje', disableTracking: 'Stop za sledenje', myLocation: 'moja lokacija', title: 'nadzor Geolocation' };
-                //Swedish
-                case 'sv':
-                    return { enableTracking: 'börja spåra', disableTracking: 'Stoppa spårning', myLocation: 'Min plats', title: 'geolocation kontroll' };
-                //Thai
-                case 'th':
-                    return { enableTracking: 'เริ่มการติดตาม', disableTracking: 'ติดตามหยุด', myLocation: 'ตำแหน่งของฉัน', title: 'ควบคุม Geolocation' };
-                //Turkish
-                case 'tr':
-                    return { enableTracking: 'izlemeyi başlat', disableTracking: 'Dur izleme', myLocation: 'Benim konumum', title: 'Coğrafi Konum kontrolü' };
-                //Ukrainian
-                case 'uk':
-                    return { enableTracking: 'почати відстеження', disableTracking: 'зупинка відстеження', myLocation: 'моє місце розташування', title: 'контроль геолокації' };
-                //Vietnamese
-                case 'vi':
-                    return { enableTracking: 'Bắt đầu theo dõi', disableTracking: 'dừng theo dõi', myLocation: 'vị trí của tôi', title: 'kiểm soát định vị' };
-                //English
-                case 'en':
-                default:
-                    return { enableTracking: 'Start tracking', disableTracking: 'Stop tracking', myLocation: 'My location', title: 'Geolocation control' };
+            var t = GeolocationControl._translations;
+            var r = t[lang];
+            if (!r) {
+                r = t['en'];
             }
+            return r;
         };
         GeolocationControl._gpsArrowIcon = '<div style="{transform}"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="translate(2 2)"><polygon points="12,0 0,24 12,17 24,24" stroke-width="2" stroke="white" fill="{color}"/></g></svg></div>';
         GeolocationControl._gpsDotIcon = '<div class="azmaps-map-gpsPulseIcon" style="background-color:{color}"></div>';
@@ -734,6 +596,88 @@ MIT License
             '.azmaps-map-gpsEnabled{background-image:url("{blueIcon}");}' +
             '.azmaps-map-gpsEnabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
             '.azmaps-map-gpsPulseIcon{display:block;width:15px;height:15px;border-radius:50%;background:orange;border:2px solid white;cursor:pointer;box-shadow:0 0 0 rgba(0, 204, 255, 0.6);animation:pulse 2s infinite;}@keyframes pulse {0% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0.6);}70% {box-shadow:0 0 0 20px rgba(0, 204, 255, 0);}100% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0);}}';
+        GeolocationControl._translations = {
+            //Afrikaans
+            'af': ['begin dop', 'stop die dop', 'my plek', 'ligginggewing beheer'],
+            //Arabic
+            'ar': ['بدء تتبع', 'تتبع توقف', 'موقعي', 'السيطرة تحديد الموقع الجغرافي'],
+            //Basque
+            'eu': ['Hasi segimendua', 'Stop jarraipena', 'Nire kokapena', 'Geokokapen kontrol'],
+            //Bulgarian
+            'bg': ['Започнете да проследявате', 'Спиране на проследяването', 'Моето място', 'контрол за геолокация'],
+            //Chinese
+            'zh': ['开始跟踪', '停止追踪', '我的位置', '地理位置控制'],
+            //Croatian
+            'hr': ['Započnite praćenje', 'zaustavljanje praćenje', 'Moja lokacija', 'kontrola Geolocation'],
+            //Czech
+            'cs': ['začít sledovat', 'Zastavit sledování', 'Moje lokace', 'ovládání Geolocation'],
+            //Danish
+            'da': ['Start sporing', 'Stop sporing', 'min placering', 'Geolocation kontrol'],
+            //Dutch
+            'nl': ['beginnen met het bijhouden', 'stop volgen', 'Mijn locatie', 'Geolocation controle'],
+            //Estonian
+            'et': ['Alusta jälgimist', 'Stopp jälgimise', 'Minu asukoht', 'Geolocation kontrolli'],
+            //Finnish
+            'fi': ['Aloita seuranta', 'Lopeta seuranta', 'Minun sijaintini', 'Geolocation ohjaus'],
+            //French
+            'fr': ['Démarrer le suivi', "suivi d'arrêt", 'Ma position', 'le contrôle de géolocalisation'],
+            //Galician
+            'gl': ['comezar a controlar', 'seguimento parada', 'A miña localización', 'control de xeolocalización'],
+            //German
+            'de': ['starten Sie Tracking', 'Stop-Tracking', 'Mein Standort', 'Geolokalisierung Steuer'],
+            //Greek
+            'el': ['Ξεκινήστε την παρακολούθηση', 'Διακοπή παρακολούθησης', 'Η τοποθεσία μου', 'ελέγχου geolocation'],
+            //Hindi
+            'hi': ['ट्रैक करना शुरू', 'बंद करो ट्रैकिंग', 'मेरा स्थान', 'जियोलोकेशन नियंत्रण'],
+            //Hungarian
+            'hu': ['követés indítása', 'követés leállítása', 'Saját hely', 'Geolocation ellenőrzés'],
+            //Indonesian
+            'id': ['Mulai pelacakan', 'berhenti pelacakan', 'Lokasi saya', 'kontrol geolocation'],
+            //Italian
+            'it': ['Inizia il monitoraggio', 'monitoraggio arresto', 'La mia posizione', 'controllo geolocalizzazione'],
+            //Japanese
+            'ja': ['追跡を開始', '追跡を停止', '私の場所', 'ジオロケーション制御'],
+            //Kazakh
+            'kk': ['қадағалау бастау', 'қадағалау тоқтату', 'Менің орналасуы', 'геоорын бақылау'],
+            //Korean
+            'ko': ['추적 시작', '정지 추적', '내 위치', '위치 정보 제어'],
+            //Spanish
+            'es': ['iniciar el seguimiento', 'Detener el seguimiento', 'Mi ubicacion', 'control de geolocalización'],
+            //Latvian
+            'lv': ['Sākt izsekošana', 'Stop izsekošana', 'Mana atrašanās vieta', 'Geolocation kontrole'],
+            //Lithuanian
+            'lt': ['pradėti stebėti', 'Sustabdyti sekimo', 'Mano vieta', 'Geografinė padėtis kontrolė'],
+            //Malay
+            'ms': ['mula menjejaki', 'Stop pengesanan', 'Lokasi saya', 'kawalan geolokasi'],
+            //Norwegian
+            'nb': ['begynne å spore', 'stopp sporing', 'Min posisjon', 'geolocation kontroll'],
+            //Polish
+            'pl': ['rozpocząć śledzenie', 'Zatrzymaj śledzenie', 'Moja lokacja', 'kontrola Geolokalizacja'],
+            //Portuguese
+            'pt': ['começar a controlar', 'rastreamento parada', 'Minha localização', 'controle de geolocalização'],
+            //Romanian
+            'ro': ['Pornire urmărire', 'Oprire urmărire', 'Locatia mea', 'controlul de geolocalizare'],
+            //Russian
+            'ru': ['Начать отслеживание', 'остановка отслеживания', 'Мое местонахождение', 'контроль геолокации'],
+            //Serbian
+            'sr': ['Старт трацкинг', 'стоп праћење', 'Моја локација', 'kontrola геолоцатион'],
+            //Slovak
+            'sk': ['začať sledovať', 'zastaviť sledovanie', 'moja poloha', 'ovládanie Geolocation'],
+            //Slovenian
+            'sl': ['Začni sledenje', 'Stop za sledenje', 'moja lokacija', 'nadzor Geolocation'],
+            //Swedish
+            'sv': ['börja spåra', 'Stoppa spårning', 'Min plats', 'geolocation kontroll'],
+            //Thai
+            'th': ['เริ่มการติดตาม', 'ติดตามหยุด', 'ตำแหน่งของฉัน', 'ควบคุม Geolocation'],
+            //Turkish
+            'tr': ['izlemeyi başlat', 'Dur izleme', 'Benim konumum', 'Coğrafi Konum kontrolü'],
+            //Ukrainian
+            'uk': ['почати відстеження', 'зупинка відстеження', 'моє місце розташування', 'контроль геолокації'],
+            //Vietnamese
+            'vi': ['Bắt đầu theo dõi', 'dừng theo dõi', 'vị trí của tôi', 'kiểm soát định vị'],
+            //English
+            'en': ['Start tracking', 'Stop tracking', 'My location', 'Geolocation control']
+        };
         return GeolocationControl;
     }(azmaps.internal.EventEmitter));
 
