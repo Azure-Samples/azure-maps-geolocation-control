@@ -18,10 +18,10 @@ Note that not all devices support geolocation and some users may choose not to s
 **Samples**
 
 [Geolocation control](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
-<br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control.png" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
+<br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control.jpg" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control)
 
 [Geolocation control options](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control%20options)
-<br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control-options.png" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control%20options)
+<br/>[<img src="https://github.com/Azure-Samples/AzureMapsCodeSamples/raw/master/AzureMapsCodeSamples/SiteResources/screenshots/Geolocation-control-options.jpg" height="200px">](https://azuremapscodesamples.azurewebsites.net/index.html?sample=Geolocation%20control%20options)
 
 ## Getting started
 
