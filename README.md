@@ -131,16 +131,7 @@ Properties of returned for a geolocation point.
 
 ## Related Projects
 
-**Open Azure Maps Web SDK modules**
-
-* [Azure Maps Animation module](https://github.com/Azure-Samples/azure-maps-animations)
-* [Azure Maps Fullscreen Control module](https://github.com/Azure-Samples/azure-maps-fullscreen-control)
-* [Azure Maps Selection Control module](https://github.com/Azure-Samples/azure-maps-selection-control)
-* [Azure Maps Sync Map module](https://github.com/Azure-Samples/azure-maps-sync-maps)
-* [Azure Maps Services UI module](https://github.com/Azure-Samples/azure-maps-services-ui)
-
-**Additional projects**
-
+* [Azure Maps Web SDK Open modules](https://github.com/microsoft/Maps/blob/master/AzureMaps.md#open-web-sdk-modules) - A collection of open source modules that extend the Azure Maps Web SDK.
 * [Azure Maps Web SDK Samples](https://github.com/Azure-Samples/AzureMapsCodeSamples)
 * [Azure Maps Gov Cloud Web SDK Samples](https://github.com/Azure-Samples/AzureMapsGovCloudCodeSamples)
 * [Azure Maps & Azure Active Directory Samples](https://github.com/Azure-Samples/Azure-Maps-AzureAD-Samples)

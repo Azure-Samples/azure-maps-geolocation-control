@@ -136,7 +136,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "geolocationerror", target: atlas.control.GeolocationControl, callback: (e: atlas.control.GeolocationControlEvents) => void): void;
+        add(eventType: "ongeolocationerror", target: atlas.control.GeolocationControl, callback: (e: PositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl`.
@@ -144,7 +144,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "geolocationsuccess", target: atlas.control.GeolocationControl, callback: (e: atlas.control.GeolocationControlEvents) => void): void;
+        add(eventType: "ongeolocationsuccess", target: atlas.control.GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, atlas.GeolocationProperties>) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -152,7 +152,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "geolocationerror", target: atlas.control.GeolocationControl, callback: (e: atlas.control.GeolocationControlEvents) => void): void;
+        addOnce(eventType: "onerror", target: atlas.control.GeolocationControl, callback: (e: PositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -160,7 +160,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "geolocationsuccess", target: atlas.control.GeolocationControl, callback: (e: atlas.control.GeolocationControlEvents) => void): void;
+        addOnce(eventType: "onsuccess", target: atlas.control.GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, atlas.GeolocationProperties>) => void): void;
         
         /**
          * Removes an event listener from the `GeolocationControl`.
@@ -171,5 +171,6 @@ declare module "azure-maps-control" {
         remove(eventType: string, target: atlas.control.GeolocationControl, callback: (e?: any) => void): void;
     }
 }
+
 
 export = atlas;

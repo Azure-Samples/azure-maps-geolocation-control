@@ -445,7 +445,7 @@ MIT License
                     this._options.showUserLocation = options.showUserLocation;
                     if (this._gpsMarker) {
                         this._gpsMarker.setOptions({
-                            visible: this._isActive && this._options.showUserLocation
+                            visible: this._isActive && options.showUserLocation
                         });
                     }
                     else if (this._lastKnownPosition) {

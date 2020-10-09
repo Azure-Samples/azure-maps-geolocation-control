@@ -1,4 +1,6 @@
-import { GeolocationControlEvents, GeolocationControl } from '../control';
+import * as azmaps from "azure-maps-control";
+import { GeolocationControl } from '../control';
+import { GeolocationProperties } from 'src/control/GeolocationProperties';
 
 /**
  * This module partially defines the map control.
@@ -20,7 +22,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationerror", target: GeolocationControl, callback: (e: GeolocationControlEvents) => void): void;
+        add(eventType: "ongeolocationerror", target: GeolocationControl, callback: (e: PositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl`.
@@ -28,7 +30,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationsuccess", target: GeolocationControl, callback: (e: GeolocationControlEvents) => void): void;
+        add(eventType: "ongeolocationsuccess", target: GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -36,7 +38,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "onerror", target: GeolocationControl, callback: (e: GeolocationControlEvents) => void): void;
+        addOnce(eventType: "onerror", target: GeolocationControl, callback: (e: PositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -44,7 +46,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "onsuccess", target: GeolocationControl, callback: (e: GeolocationControlEvents) => void): void;
+        addOnce(eventType: "onsuccess", target: GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>) => void): void;
         
         /**
          * Removes an event listener from the `GeolocationControl`.
