@@ -147,6 +147,7 @@
     <fieldset class="sidePanel">
         <legend><h1 style="font-size:16px">Geolocation control options</h1></legend>
         This sample shows all the options of the geolocation control. <br /><br />
+        This samples uses the open source <a href="https://github.com/Azure-Samples/azure-maps-geolocation-control" target="_blank">Azure Maps Geolocation Control module</a>.
             
         <div class="tab">
             <button class="tablinks active" onclick="openTab(this, 'Options')">Options</button>
@@ -188,7 +189,7 @@
                 <tr title="The maximum zoom level the map can be zoomed out. If zoomed out more than this when location updates, the map will zoom into this level. If zoomed in more than this level, the map will maintain its current zoom level.">
                     <td>Max zoom</td>
                     <td>
-                        <form oninput="maxz.value=maximumAge.value">
+                        <form oninput="maxz.value=maxZoom.value">
                             <input type="range" id="maxZoom" value="15" min="0" max="24" step="1" onchange="update()" />
                             <output name="maxz" for="maxZoom">0</output>
                         </form>

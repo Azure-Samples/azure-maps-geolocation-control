@@ -47,17 +47,17 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
     private _lastKnownPosition: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
 
     private static _gpsArrowIcon = '<div style="{transform}"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><g transform="translate(2 2)"><polygon points="12,0 0,24 12,17 24,24" stroke-width="2" stroke="white" fill="{color}"/></g></svg></div>';
-    private static _gpsDotIcon = '<div class="azmaps-map-gpsPulseIcon" style="background-color:{color}"></div>';
+    private static _gpsDotIcon = '<div class="azmaps-gpsPulseIcon" style="background-color:{color}"></div>';
 
     private static _iconTemplate = "data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' x='0' y='0' viewBox='0 0 561 561' xml:space='preserve'><g fill='{color}'><path d='M280.5,178.5c-56.1,0-102,45.9-102,102c0,56.1,45.9,102,102,102c56.1,0,102-45.9,102-102C382.5,224.4,336.6,178.5,280.5,178.5z M507.45,255C494.7,147.9,410.55,63.75,306,53.55V0h-51v53.55C147.9,63.75,63.75,147.9,53.55,255H0v51h53.55C66.3,413.1,150.45,497.25,255,507.45V561h51v-53.55C413.1,494.7,497.25,410.55,507.45,306H561v-51H507.45z M280.5,459C181.05,459,102,379.95,102,280.5S181.05,102,280.5,102S459,181.05,459,280.5S379.95,459,280.5,459z'/></g></svg>";
 
     private static _gpsBtnCss =
-        '.azmaps-map-gpsBtn{margin:0;padding:0;border:none;border-collapse:collapse;width:32px;height:32px;text-align:center;cursor:pointer;line-height:32px;background-repeat:no-repeat;background-size:20px;background-position:center center;z-index:200;box-shadow:0px 0px 4px rgba(0,0,0,0.16);}' +
-        '.azmaps-map-gpsDisabled{background-image:url("{grayIcon}");}' +
-        '.azmaps-map-gpsDisabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
-        '.azmaps-map-gpsEnabled{background-image:url("{blueIcon}");}' +
-        '.azmaps-map-gpsEnabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' + 
-        '.azmaps-map-gpsPulseIcon{display:block;width:15px;height:15px;border-radius:50%;background:orange;border:2px solid white;cursor:pointer;box-shadow:0 0 0 rgba(0, 204, 255, 0.6);animation:pulse 2s infinite;}@keyframes pulse {0% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0.6);}70% {box-shadow:0 0 0 20px rgba(0, 204, 255, 0);}100% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0);}}';
+        '.azmaps-gpsBtn{margin:0;padding:0;border:none;border-collapse:collapse;width:32px;height:32px;text-align:center;cursor:pointer;line-height:32px;background-repeat:no-repeat;background-size:20px;background-position:center center;z-index:200;box-shadow:0px 0px 4px rgba(0,0,0,0.16);}' +
+        '.azmaps-gpsDisabled{background-image:url("{grayIcon}");}' +
+        '.azmaps-gpsDisabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' +
+        '.azmaps-gpsEnabled{background-image:url("{blueIcon}");}' +
+        '.azmaps-gpsEnabled:hover{background-image:url("{blueIcon}");filter:brightness(90%);}' + 
+        '.azmaps-gpsPulseIcon{display:block;width:15px;height:15px;border-radius:50%;background:orange;border:2px solid white;cursor:pointer;box-shadow:0 0 0 rgba(0, 204, 255, 0.6);animation:pulse 2s infinite;}@keyframes pulse {0% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0.6);}70% {box-shadow:0 0 0 20px rgba(0, 204, 255, 0);}100% {box-shadow:0 0 0 0 rgba(0, 204, 255, 0);}}';
 
     /****************************
      * Constructor
@@ -71,36 +71,37 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         super();
 
         if (options) {
+            const opt = this._options;
             if (options.positionOptions) {
-                this._options.positionOptions = Object.assign(this._options.positionOptions, options.positionOptions);
+                opt.positionOptions = Object.assign(opt.positionOptions, options.positionOptions);
             }
 
             if (options.style) {
-                this._options.style = options.style;
+                opt.style = options.style;
             }
 
             if (options.markerColor) {
-                this._options.markerColor = options.markerColor;
+                opt.markerColor = options.markerColor;
             }
 
             if (typeof options.showUserLocation === 'boolean') {
-                this._options.showUserLocation = options.showUserLocation;
+                opt.showUserLocation = options.showUserLocation;
             }
 
             if (typeof options.trackUserLocation === 'boolean') {
-                this._options.trackUserLocation = options.trackUserLocation;
+                opt.trackUserLocation = options.trackUserLocation;
             }
 
             if(typeof options.maxZoom === 'number'){
-                this._options.maxZoom = Math.min(Math.max(options.maxZoom, 0), 24);
+                opt.maxZoom = Math.min(Math.max(options.maxZoom, 0), 24);
             }
 
             if (typeof options.calculateMissingValues === 'boolean') {
-                this._options.calculateMissingValues = options.calculateMissingValues;
+                opt.calculateMissingValues = options.calculateMissingValues;
             }            
 
             if (typeof options.updateMapCamera === 'boolean') {
-                this._options.updateMapCamera = options.updateMapCamera;
+                opt.updateMapCamera = options.updateMapCamera;
                 this._updateMapCamera = options.updateMapCamera;
             }
         }
@@ -112,12 +113,13 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
     /** Disposes the control. */
     public dispose(): void {
-        if(this._map){
-            this._map.controls.remove(this);
+        const self = this;
+        if(self._map){
+            self._map.controls.remove(self);
         }
 
-        Object.keys(this).forEach(k => {
-            this[k] = null;
+        Object.keys(self).forEach(k => {
+            self[k] = null;
         });
     }
 
@@ -133,60 +135,61 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * @returns The HTML Element that represents the control.
      */
     public onAdd(map: azmaps.Map, options?: azmaps.ControlOptions): HTMLElement {
-        this._map = map;
+        const self = this;
+        self._map = map;
         
-        let mcl = map.getMapContainer().classList;
+        const mcl = map.getMapContainer().classList;
         if(mcl.contains("high-contrast-dark")){
-            this._hclStyle = <azmaps.ControlStyle>'dark';
+            self._hclStyle = <azmaps.ControlStyle>'dark';
         }  else if (mcl.contains("high-contrast-light")){
-            this._hclStyle = <azmaps.ControlStyle>'light';
+            self._hclStyle = <azmaps.ControlStyle>'light';
         }
 
-        this._resource = this._getTranslations(this._map.getStyle().language);
+        self._resource = self._getTranslations(self._map.getStyle().language);
 
         //Create different color icons and merge into CSS.
-        let gc = GeolocationControl;
-        let grayIcon = gc._iconTemplate.replace('{color}', 'Gray');
-        let blueIcon = gc._iconTemplate.replace('{color}', 'DeepSkyBlue');
-        let css = gc._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
+        const gc = GeolocationControl;
+        const grayIcon = gc._iconTemplate.replace('{color}', 'Gray');
+        const blueIcon = gc._iconTemplate.replace('{color}', 'DeepSkyBlue');
+        const css = gc._gpsBtnCss.replace(/{grayIcon}/g, grayIcon).replace(/{blueIcon}/g, blueIcon);
 
         //Add the CSS style for the control to the DOM.
-        let style = document.createElement('style');
+        const style = document.createElement('style');
         style.innerHTML = css;
         document.body.appendChild(style);
 
         //Create the button.
-        let c = document.createElement('div');
+        const c = document.createElement('div');
         c.classList.add('azure-maps-control-container');
-        c.setAttribute('aria-label', this._resource[0]);
+        c.setAttribute('aria-label', self._resource[0]);
         c.style.flexDirection = 'column';
 
         //Hide the button by default. 
-        this._container.style.display = 'none';
-        this._container = c;
+        c.style.display = 'none';
+        self._container = c;
 
-        let b = document.createElement("button");
-        b.classList.add('azmaps-map-gpsBtn');
-        b.classList.add('azmaps-map-gpsDisabled');
-        b.setAttribute('title', this._resource[0]);
-        b.setAttribute('alt', this._resource[0]);
+        const b = document.createElement("button");
+        b.classList.add('azmaps-gpsBtn');
+        b.classList.add('azmaps-gpsDisabled');
+        b.setAttribute('title', self._resource[0]);
+        b.setAttribute('alt', self._resource[0]);
         b.setAttribute('type', 'button');
-        b.addEventListener('click', this._toggleBtn);
-        this._button = b;
+        b.addEventListener('click', self._toggleBtn);
+        self._button = b;
 
-        this._updateState();
-        this.setOptions(this._options);
+        self._updateState();
+        self.setOptions(self._options);
         c.appendChild(b);
 
         //Check that geolocation is supported.
         gc.isSupported().then(supported => {
             if (supported) {
                 //Show the button when we know geolocation is supported.
-                this._container.style.display = '';
+                self._container.style.display = '';
             } else {
                 //Device doesn't support getting position.
                 //@ts-ignore
-                this._invokeEvent('geolocationerror', {
+                self._invokeEvent('geolocationerror', {
                     code: 2,
                     message: 'Geolocation API not supported by device.',
                     PERMISSION_DENIED: 1,
@@ -196,36 +199,37 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
             }
         });
 
-        this._map.events.add('movestart', this._mapMoveStarted);
+        self._map.events.add('movestart', self._mapMoveStarted);
 
-        this.setOptions(this._options);
+        self.setOptions(self._options);
         
-        return this._container;
+        return c;
     }
 
     /**
      * Action to perform when control is removed from the map.
      */
     public onRemove(): void {
-        if (this._container) {
-            this._container.remove();
+        const self = this;
+        if (self._container) {
+            self._container.remove();
         }
 
-        if (this._options.style === 'auto') {
-            this._map.events.remove('styledata', this._mapStyleChanged);
+        if (self._options.style === 'auto') {
+            self._map.events.remove('styledata', self._mapStyleChanged);
         }
 
-        this._map.events.remove('movestart', this._mapMoveStarted);
+        self._map.events.remove('movestart', self._mapMoveStarted);
 
-        if (typeof this._watchId !== 'undefined') {
-            navigator.geolocation.clearWatch(this._watchId);
+        if (typeof self._watchId !== 'undefined') {
+            navigator.geolocation.clearWatch(self._watchId);
         }
 
-        if (this._gpsMarker) {
-            this._map.markers.remove(this._gpsMarker);
+        if (self._gpsMarker) {
+            self._map.markers.remove(self._gpsMarker);
         }
 
-        this._map = null;
+        self._map = null;
     }
 
     /** Gets the options of the geolocation control. */
@@ -238,77 +242,80 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * @param options The options.
      */
     public setOptions(options: GeolocationControlOptions): void {
+        const self = this;
+        const o = self._options;
+
         if (options) {
             let color = 'white';
 
-            if(this._hclStyle) {
-                if(this._hclStyle === 'dark'){
-                    color = this._darkColor;
+            if(self._hclStyle) {
+                if(self._hclStyle === 'dark'){
+                    color = self._darkColor;
                 }
             } else {
-                if (this._options.style === 'auto') {
-                    this._map.events.remove('styledata', this._mapStyleChanged);
+                if (o.style === 'auto') {
+                    self._map.events.remove('styledata', self._mapStyleChanged);
                 }
 
-                this._options.style = options.style;
+                o.style = options.style;
 
                 switch (options.style) {
                     case 'dark':
-                        color = this._darkColor;
+                        color = self._darkColor;
                         break;
                     case 'auto':
                         //Color will change between light and dark depending on map style.
-                        this._map.events.add('styledata', this._mapStyleChanged);
-                        color = this._getColorFromMapStyle();
+                        self._map.events.add('styledata', self._mapStyleChanged);
+                        color = self._getColorFromMapStyle();
                         break;
                     //case 'light':
                         //break;
                 }
             }
 
-            this._button.style.backgroundColor = color;           
+            self._button.style.backgroundColor = color;           
 
             if (options.markerColor) {
-                this._options.markerColor = options.markerColor;
+                o.markerColor = options.markerColor;
 
-                if (this._gpsMarker) {
-                    this._gpsMarker.setOptions({
+                if (self._gpsMarker) {
+                    self._gpsMarker.setOptions({
                         color: options.markerColor
                     });
                 }
             }
 
             if(typeof options.maxZoom === 'number'){
-                this._options.maxZoom = Math.min(Math.max(options.maxZoom, 0), 24);
+                o.maxZoom = Math.min(Math.max(options.maxZoom, 0), 24);
             }
 
             if (typeof options.calculateMissingValues === 'boolean') {
-                this._options.calculateMissingValues = options.calculateMissingValues;
+                o.calculateMissingValues = options.calculateMissingValues;
             }
 
             if (typeof options.updateMapCamera === 'boolean') {
-                this._options.updateMapCamera = options.updateMapCamera;
-                this._updateMapCamera = options.updateMapCamera;
+                o.updateMapCamera = options.updateMapCamera;
+                self._updateMapCamera = options.updateMapCamera;
             }
 
             if (typeof options.showUserLocation === 'boolean') {
-                this._options.showUserLocation = options.showUserLocation;
+                o.showUserLocation = options.showUserLocation;
 
-                if (this._gpsMarker) {
-                    this._gpsMarker.setOptions({
-                        visible: this._isActive && options.showUserLocation
+                if (self._gpsMarker) {
+                    self._gpsMarker.setOptions({
+                        visible: self._isActive && options.showUserLocation
                     });
-                } else if (this._lastKnownPosition) {
-                    this._onGpsSuccess();
+                } else if (self._lastKnownPosition) {
+                    self._onGpsSuccess();
                 }
             }
 
             if (typeof options.trackUserLocation === 'boolean') {
-                this._options.trackUserLocation = options.trackUserLocation;
+                o.trackUserLocation = options.trackUserLocation;
             }
 
             if (options.positionOptions) {
-                var opt: PositionOptions = {};
+                let opt: PositionOptions = {};
 
                 if (options.positionOptions.enableHighAccuracy) {
                     opt.enableHighAccuracy = options.positionOptions.enableHighAccuracy;
@@ -323,9 +330,9 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 }
 
                 if (Object.keys(opt).length > 0) {
-                    this._options.positionOptions = Object.assign(this._options.positionOptions, opt);
-                    this._stopTracking();
-                    this._updateState();
+                    o.positionOptions = Object.assign(o.positionOptions, opt);
+                    self._stopTracking();
+                    self._updateState();
                 }
             }
         }
@@ -335,15 +342,16 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Toggles the state of the Geolocation control button. If a boolean state is not passed in, will toggle to opposite of current state. 
      * @param isActive The state to toggle to. If not specified, will toggle to opposite of current state.
      */
-    public toggle(isActive?: boolean): void {        
-        this._isActive = (typeof isActive === 'boolean') ? isActive : !this._isActive;
+    public toggle(isActive?: boolean): void {    
+        const self = this;    
+        self._isActive = (typeof isActive === 'boolean') ? isActive : !self._isActive;
         
-        if (this._isActive && this._options.trackUserLocation && this._lastKnownPosition) {
-            this._onGpsSuccess();
+        if (self._isActive && self._options.trackUserLocation && self._lastKnownPosition) {
+            self._onGpsSuccess();
         }
 
-        this._updateMapCamera = this._options.updateMapCamera;
-        this._updateState();
+        self._updateMapCamera = self._options.updateMapCamera;
+        self._updateState();
     }
 
     /** Checks to see if the geolocation API is supported in the browser. */
@@ -353,7 +361,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
             // http://caniuse.com/#feat=permissions-api
             // Test for the case where a browser disables Geolocation because of an insecure origin.
 
-            var p = await window.navigator.permissions.query({ name: 'geolocation' });            
+            const p = await window.navigator.permissions.query({ name: 'geolocation' });            
             return p.state !== 'denied';
         } 
 
@@ -373,8 +381,9 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * An event handler for when the map style changes. Used when control style is set to auto.
      */
     private _mapStyleChanged = () => {
-        if (this._button && !this._hclStyle) {
-            this._button.style.backgroundColor = this._getColorFromMapStyle();
+        const self = this;    
+        if (self._button && !self._hclStyle) {
+            self._button.style.backgroundColor = self._getColorFromMapStyle();
         }
     };
 
@@ -390,8 +399,8 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Retrieves the background color for the button based on the map style. This is used when style is set to auto.
      */
     private _getColorFromMapStyle(): string {
-         //When the style is dark (i.e. satellite, night), show the dark colored theme.
-         if(['satellite', 'satellite_road_labels', 'grayscale_dark','night'].indexOf(this._map.getStyle().style) > -1){
+        //When the style is dark (i.e. satellite, night), show the dark colored theme.
+        if(['satellite', 'satellite_road_labels', 'grayscale_dark','night'].indexOf(this._map.getStyle().style) > -1){
             return this._darkColor;
         }
 
@@ -400,9 +409,10 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
     /** Removes the geolocation watcher used for tracking. */
     private _stopTracking(): void {
-        if (typeof this._watchId === 'number') {
-            navigator.geolocation.clearWatch(this._watchId);
-            this._watchId = null;
+        const self = this;
+        if (typeof self._watchId === 'number') {
+            navigator.geolocation.clearWatch(self._watchId);
+            self._watchId = null;
         }
     }
 
@@ -410,44 +420,46 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Updates the state of the button.
      */
     private _updateState(): void {
-        if (!this._isActive || this._options.trackUserLocation) {
-            this._stopTracking();
+        const self = this;
+        if (!self._isActive || self._options.trackUserLocation) {
+            self._stopTracking();
         }
 
-        if (this._gpsMarker) {
-            this._gpsMarker.setOptions({
-                visible: this._isActive && this._options.showUserLocation
+        if (self._gpsMarker) {
+            self._gpsMarker.setOptions({
+                visible: self._isActive && self._options.showUserLocation
             });
         }
 
-        var ariaLabel = this._resource[2];
-        var removeClass = 'azmaps-map-gpsEnabled';
-        var addClass = 'azmaps-map-gpsDisabled';
+        let ariaLabel = self._resource[2];
+        let removeClass = 'azmaps-gpsEnabled';
+        let addClass = 'azmaps-gpsDisabled';
 
-        if (this._isActive) {
-            removeClass = 'azmaps-map-gpsDisabled';
-            addClass = 'azmaps-map-gpsEnabled';
+        if (self._isActive) {
+            removeClass = 'azmaps-gpsDisabled';
+            addClass = 'azmaps-gpsEnabled';
 
-            if (this._options.trackUserLocation) {
-                if (typeof this._watchId !== 'number') {
-                    this._watchId = navigator.geolocation.watchPosition(this._onGpsSuccess, this._onGpsError, this._options.positionOptions);
+            if (self._options.trackUserLocation) {
+                if (typeof self._watchId !== 'number') {
+                    self._watchId = navigator.geolocation.watchPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
                 }
 
-                ariaLabel = this._resource[1];
+                ariaLabel = self._resource[1];
             } else {
-                navigator.geolocation.getCurrentPosition(this._onGpsSuccess, this._onGpsError, this._options.positionOptions);
+                navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
             }           
         } else {
-            if (this._options.trackUserLocation) {
-                ariaLabel = this._resource[0];
+            if (self._options.trackUserLocation) {
+                ariaLabel = self._resource[0];
             }
         }
 
-        this._button.setAttribute('title', ariaLabel);
-        this._button.setAttribute('alt', ariaLabel);
+        const b = self._button;
+        b.setAttribute('title', ariaLabel);
+        b.setAttribute('alt', ariaLabel);
 
-        this._button.classList.remove(removeClass);
-        this._button.classList.add(addClass);
+        b.classList.remove(removeClass);
+        b.classList.add(addClass);
     }
 
     /**
@@ -455,79 +467,85 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * @param position The GPS position information.
      */
     private _onGpsSuccess = (position?: Position) => {
-        var pos: azmaps.data.Position;
+        const self = this;
+        const options = self._options;
+        const map = self._map;
+        let lastKnownPosition = self._lastKnownPosition;
+        let gpsMarker = self._gpsMarker;
+        let pos: azmaps.data.Position;
 
         if(position){
             pos = [position.coords.longitude, position.coords.latitude];
 
             //@ts-ignore
-            var geopos: GeolocationProperties = {
+            let geopos: GeolocationProperties = {
                 timestamp: new Date(position.timestamp),
                 _timestamp: position.timestamp
             };
 
             Object.assign(geopos, position.coords);
 
-            if(this._options.calculateMissingValues && this._lastKnownPosition){
+            if(options.calculateMissingValues && lastKnownPosition){
                 if(typeof position.coords.speed !== 'number'){
-                    let dt = position.timestamp - this._lastKnownPosition.properties._timestamp;
-                    let dx = azmaps.math.getDistanceTo(this._lastKnownPosition.geometry.coordinates, pos);
+                    let dt = position.timestamp - lastKnownPosition.properties._timestamp;
+                    let dx = azmaps.math.getDistanceTo(lastKnownPosition.geometry.coordinates, pos);
                     geopos.speed = dx/(dt * 0.001);
                 }
 
                 if(typeof position.coords.heading !== 'number'){
-                    geopos.heading = azmaps.math.getHeading(this._lastKnownPosition.geometry.coordinates, pos);
+                    geopos.heading = azmaps.math.getHeading(lastKnownPosition.geometry.coordinates, pos);
                 }
             }
 
-            this._lastKnownPosition = new azmaps.data.Feature(new azmaps.data.Point(pos), geopos);
+            lastKnownPosition = new azmaps.data.Feature(new azmaps.data.Point(pos), geopos);
+            self._lastKnownPosition = lastKnownPosition;
         } 
         
-        if(this._lastKnownPosition){
+        if(lastKnownPosition){
             if(!pos){
-                pos = this._lastKnownPosition.geometry.coordinates;
+                pos = lastKnownPosition.geometry.coordinates;
             }
 
-            if (this._isActive) {
-                var icon = this._getMarkerIcon();
+            if (self._isActive) {
+                const icon = self._getMarkerIcon();
 
-                if (this._options.showUserLocation) {
-                    if (!this._gpsMarker) {
-                        this._gpsMarker = new azmaps.HtmlMarker({
+                if (options.showUserLocation) {
+                    if (!gpsMarker) {
+                        self._gpsMarker = new azmaps.HtmlMarker({
                             position: pos,
                             htmlContent: icon,
-                            color: this._options.markerColor
+                            color: options.markerColor
                         });
 
-                        this._map.markers.add(this._gpsMarker);
+                        map.markers.add(self._gpsMarker);
                     } else {
-                        this._gpsMarker.setOptions({
+                        gpsMarker.setOptions({
                             position: pos,
                             htmlContent: icon,
-                            visible: this._isActive && this._options.showUserLocation
+                            visible: self._isActive && options.showUserLocation
                         });
                     }
                 } else {
-                    this._gpsMarker.setOptions({
+                    gpsMarker.setOptions({
                         visible: false
                     });
                 }
 
-                if (this._updateMapCamera) {
-                    var opt: any = {
+                if (self._updateMapCamera) {
+                    const opt: any = {
                         center: pos
                     };
 
                     //Only adjust zoom if the user is zoomed out too much.
-                    if (this._map.getCamera().zoom < 15) {
+                    if (map.getCamera().zoom < 15) {
                         opt.zoom = 15;
                     }
 
-                    this._map.setCamera(opt);
+                    map.setCamera(opt);
                 }
             }
 
-            this._invokeEvent('geolocationsuccess', this._lastKnownPosition);
+            self._invokeEvent('geolocationsuccess', lastKnownPosition);
         }
     };
 
@@ -536,22 +554,22 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * @param error The error that occured.
      */
     private _onGpsError = (error: PositionError) => {
-        this._watchId = null;
-        this._isActive = false;
-        this._updateState();
-        this._invokeEvent('geolocationerror', error);
+        const self = this;
+        self._watchId = null;
+        self._isActive = false;
+        self._updateState();
+        self._invokeEvent('geolocationerror', error);
     }
 
     /** Generates the mark icon HTML */
     private _getMarkerIcon(): string {
-        var icon = GeolocationControl._gpsDotIcon;
-
-        var h = this._lastKnownPosition.properties.heading;
+        let icon = GeolocationControl._gpsDotIcon;
+        let h = this._lastKnownPosition.properties.heading;
         
         if (this._options.trackUserLocation && h !== null && !isNaN(h)) {
             h = Math.round(h);
             //TODO: update when markers support rotation.
-            var transform = `-webkit-transform:rotate(${h}deg);transform:rotate(${h}deg)`;
+            const transform = `-webkit-transform:rotate(${h}deg);transform:rotate(${h}deg)`;
             icon = GeolocationControl._gpsArrowIcon.replace('{transform}', transform);
         }
 
@@ -569,8 +587,8 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
             lang = lang.substring(0, lang.indexOf('-'));
         }
 
-        var t = GeolocationControl._translations;
-        var r = t[lang];
+        const t = GeolocationControl._translations;
+        let r = t[lang];
 
         if(!r){
             r = t['en']
