@@ -548,6 +548,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                     });
                 }
 
+                //@ts-ignore
                 self._gpsMarker.marker.setPitchAlignment('map');
 
                 if (self._updateMapCamera) {
