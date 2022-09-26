@@ -200,6 +200,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         });
 
         self._map.events.add('movestart', self._mapMoveStarted);
+        self._map.events.add('moveend', self._mapMoveEnded);
 
         self.setOptions(self._options);
         
@@ -220,6 +221,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         }
 
         self._map.events.remove('movestart', self._mapMoveStarted);
+        self._map.events.remove('moveend', self._mapMoveEnded);        
 
         if (typeof self._watchId !== 'undefined') {
             navigator.geolocation.clearWatch(self._watchId);
@@ -396,6 +398,15 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
     };
 
     /**
+    * An event handler for when the map stops to moving.
+    * When this happens, we don't want the map camera to automatically move if tracking.
+    */
+      private _mapMoveEnded = () => {
+        this._updateMapCamera = this._options.updateMapCamera;
+    };
+
+
+    /**
      * Retrieves the background color for the button based on the map style. This is used when style is set to auto.
      */
     private _getColorFromMapStyle(): string {
@@ -441,12 +452,18 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
             if (self._options.trackUserLocation) {
                 if (typeof self._watchId !== 'number') {
-                    self._watchId = navigator.geolocation.watchPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
+                    self._watchId = navigator.geolocation.watchPosition(self._onGpsSuccess, () => {
+                        //Fallback to low accuracy results.
+                        navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: false }));
+                    }, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: true }));
                 }
 
                 ariaLabel = self._resource[1];
             } else {
-                navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
+                //True high accuracy first then fall back if needed.
+                navigator.geolocation.getCurrentPosition(self._onGpsSuccess, () => {
+                    navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: false }));
+                }, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: true }));
             }           
         } else {
             if (self._options.trackUserLocation) {
@@ -530,6 +547,8 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                         visible: false
                     });
                 }
+
+                self._gpsMarker.marker.setPitchAlignment('map');
 
                 if (self._updateMapCamera) {
                     const opt: any = {
