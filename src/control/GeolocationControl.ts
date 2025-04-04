@@ -596,7 +596,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
     private _getMarkerIcon(): HTMLDivElement {
         let icon = document.createElement('div');
         icon.className = 'gps-container';
-        icon.innerHTML = GeolocationControl._gpsDotIcon.replace('{color}', 'dodgerBlue');
+        icon.innerHTML = GeolocationControl._gpsDotIcon.replace('{color}', this._options.markerColor);
         return icon;
     }
 
