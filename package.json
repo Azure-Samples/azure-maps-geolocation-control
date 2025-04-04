@@ -1,6 +1,6 @@
 {
   "name": "azure-maps-geolocation-control",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An Azure Maps Web SDK module that provides a control that uses the browser's geolocation API to locate the user on the map.",
   "keywords": [
     "azure",
@@ -28,7 +28,7 @@
     "@types/puppeteer": "^1.20.4",
     "fs-extra": "^7.0.1",
     "lodash": "^4.17.15",
-    "mocha": "^7.1.1",
+    "mocha": "^10.7.3",
     "mocha-parallel-tests": "^2.3.0",
     "puppeteer": "^2.1.1",
     "rollup": "^1.32.1",
