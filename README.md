@@ -123,7 +123,7 @@ Options for the GeolocationControl.
 | `enableCompass` | `boolean` | Specifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` |
 | `markerColor` | `string` | The color of the user location marker. Default: `DodgerBlue` |
 | `maxZoom` | `number` | The maximum zoom level the map can be zoomed out. If zoomed out more than this when location updates, the map will zoom into this level. If zoomed in more than this level, the map will maintain its current zoom level. Default: `15` |
-| `positionOptions` | `PositionOptions` | A [Geolocation API PositionOptions](https://w3c.github.io/geolocation-api/#position_options_interface) object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` |
+| `positionOptions` | `PositionOptions` | A [Geolocation API PositionOptions](https://w3c.github.io/geolocation-api/#position_options_interface) object. Default: `{ enableHighAccuracy: true, maximumAge: Infinity, timeout: 10000 }` |
 | `showUserLocation` | `boolean` | Shows the users location on the map using a marker. Default: `true` |
 | `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light`. |
 | `syncMapCompassHeading` | `boolean` | Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` |

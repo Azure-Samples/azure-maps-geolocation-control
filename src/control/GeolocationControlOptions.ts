@@ -26,7 +26,7 @@ export interface GeolocationControlOptions {
      **/
     maxZoom?: number;
 
-    /** A Geolocation API PositionOptions object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` */
+    /** A Geolocation API PositionOptions object. Default: `{ enableHighAccuracy: true, maximumAge: Infinity, timeout: 10000 }` */
     positionOptions?: PositionOptions;
 
     /** Shows the users location on the map using a marker. Default: `true` */
