@@ -217,6 +217,26 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         b.setAttribute('alt', self._resource[0]);
         b.setAttribute('type', 'button');
         b.addEventListener('click', self._toggleBtn);
+
+        if(self._hclStyle) {            
+            if(self._hclStyle === 'dark'){
+                b.style.backgroundColor = self._darkColor;
+            }
+        } else {
+            switch (self._options.style) {
+                case 'dark':
+                    b.style.backgroundColor = self._darkColor;
+                    break;
+                case 'auto':
+                    //Color will change between light and dark depending on map style.
+                    self._map.events.add('styledata', self._mapStyleChanged);
+                    b.style.backgroundColor = self._getColorFromMapStyle();
+                    break;
+                //case 'light':
+                    //break;
+            }
+        }
+        
         self._button = b;
 
         self._updateState();
@@ -297,34 +317,36 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         const o = self._options;
 
         if (options) {
-            let color = 'white';
+            if(options.style){
+                let color = 'white';
 
-            if(self._hclStyle) {
-                if(self._hclStyle === 'dark'){
-                    color = self._darkColor;
-                }
-            } else {
-                if (o.style === 'auto') {
-                    self._map.events.remove('styledata', self._mapStyleChanged);
-                }
-
-                o.style = options.style;
-
-                switch (options.style) {
-                    case 'dark':
+                if(self._hclStyle) {
+                    if(self._hclStyle === 'dark'){
                         color = self._darkColor;
-                        break;
-                    case 'auto':
-                        //Color will change between light and dark depending on map style.
-                        self._map.events.add('styledata', self._mapStyleChanged);
-                        color = self._getColorFromMapStyle();
-                        break;
-                    //case 'light':
-                        //break;
-                }
-            }
+                    }
+                } else {
+                    if (o.style === 'auto') {
+                        self._map.events.remove('styledata', self._mapStyleChanged);
+                    }
 
-            self._button.style.backgroundColor = color;           
+                    o.style = options.style;
+
+                    switch (options.style) {
+                        case 'dark':
+                            color = self._darkColor;
+                            break;
+                        case 'auto':
+                            //Color will change between light and dark depending on map style.
+                            self._map.events.add('styledata', self._mapStyleChanged);
+                            color = self._getColorFromMapStyle();
+                            break;
+                        //case 'light':
+                            //break;
+                    }
+                }
+
+                self._button.style.backgroundColor = color;
+            }        
 
             if (options.markerColor) {
                 o.markerColor = options.markerColor;

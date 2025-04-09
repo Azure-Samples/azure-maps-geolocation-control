@@ -13,6 +13,7 @@
 **Bug fixes**
 
 - Updated packages and build scripts to address `npm install` issues.
+- Fix issue where setting any option caused the button style to reset.
 
 <a name="0.0.3"></a>
 # 0.0.3 (2025-04-04)
