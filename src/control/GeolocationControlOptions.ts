@@ -6,6 +6,15 @@ export interface GeolocationControlOptions {
     /** Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` */
     calculateMissingValues?: boolean;
 
+    /** 
+     * The delay in milliseconds between compass events. The compass heading value can change very rapidly with the slightest movement of a device which can negatively 
+     * impact applications where heavy computations or UI changes occur due to the event. This options throttles how frequently the event will fire. Only values greater or equal to `100` are accepted.
+     * The marker direction updates independantly of this option. Default: `100` */
+    compassEventThrottleDelay?: number;
+
+    /** Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
+    enableCompass?: boolean;
+
     /** The color of the user location marker. Default: `DodgerBlue` */
     markerColor?: string;
 
@@ -30,6 +39,9 @@ export interface GeolocationControlOptions {
     * @default light
     */
     style?: azmaps.ControlStyle | string;
+
+    /** Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` */
+    syncMapCompassHeading?: boolean;
 
     /** If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` */
     trackUserLocation?: boolean;

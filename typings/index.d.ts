@@ -10,7 +10,10 @@ declare namespace atlas {
             geolocationsuccess: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
         
             /** Event fired when an error has occured. */
-            geolocationerror: PositionError;
+            geolocationerror: GeolocationPositionError;
+
+            /** Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. */
+            compassheadingchanged: number;
         }
 
         /** A control that uses the browser's geolocation API to locate the user on the map. */
@@ -26,7 +29,7 @@ declare namespace atlas {
             public dispose(): void;
         
             /** Get sthe last known position from the geolocation control. */
-            public getLastKnownPosition(): Position;
+            public getLastKnownPosition(): azmaps.data.Feature<azmaps.data.Point, GeolocationProperties> ;
 
             /** Gets the options of the geolocation control. */
             public getOptions(): GeolocationControlOptions;
@@ -52,6 +55,12 @@ declare namespace atlas {
 
         /** Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` */
         calculateMissingValues?: boolean;
+
+        /** 
+         * The delay in milliseconds between compass events. The compass heading value can change very rapidly with the slightest movement of a device which can negatively 
+         * impact applications where heavy computations or UI changes occur due to the event. This options throttles how frequently the event will fire. Only values greater or equal to `100` are accepted.
+         * The marker direction updates independantly of this option. Default: `100` */
+        compassEventThrottleDelay?: number;
 
         /** The color of the user location marker. Default: `DodgerBlue` */
         markerColor?: string;
@@ -83,6 +92,12 @@ declare namespace atlas {
 
         /** Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` */
         updateMapCamera?: boolean;
+
+        /** Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
+        enableCompass?: boolean;
+    
+        /** Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` */
+        syncMapCompassHeading?: boolean;
     }
 
     /** Properties of returned for a geolocation point. */
@@ -95,9 +110,17 @@ declare namespace atlas {
         
         /** The altitudeAccuracy attribute is specified in meters. */
         altitudeAccuracy: number | null;
-        
-        /** The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north. */
+    
+        /** The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, 
+         * counting clockwise relative to the true north. This will be either from the geolocation API, and fallback to a calculated value if in 
+         * user tracking mode with  `calculateMissingValues` set to `true`. */
         heading: number | null;
+    
+        /** Specifies if the `heading` value came from the geolocation API or was calculated. Null when there is no `heading` value. */
+        headingType: "geolocation" | "calculated" | null;
+    
+        /** The heading value of the compass based on the device orientation. */
+        compassHeading: number | null;
         
         /** The latitude position. */
         latitude: number;
@@ -136,7 +159,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationerror", target: atlas.control.GeolocationControl, callback: (e: PositionError) => void): void;
+        add(eventType: "geolocationerror", target: atlas.control.GeolocationControl, callback: (e: GeolocationPositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl`.
@@ -144,7 +167,15 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationsuccess", target: atlas.control.GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, atlas.GeolocationProperties>) => void): void;
+        add(eventType: "geolocationsuccess", target: atlas.control.GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, atlas.GeolocationProperties>) => void): void;
+
+        /**
+         * Adds an event to the `GeolocationControl`.
+         * @param eventType The event name.
+         * @param target The `GeolocationControl` to add the event for.
+         * @param callback The event handler callback.
+         */
+        add(eventType: "compassheadingchanged", target: atlas.control.GeolocationControl, callback: (e: number) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -152,7 +183,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "onerror", target: atlas.control.GeolocationControl, callback: (e: PositionError) => void): void;
+        addOnce(eventType: "onerror", target: atlas.control.GeolocationControl, callback: (e: GeolocationPositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -162,6 +193,14 @@ declare module "azure-maps-control" {
          */
         addOnce(eventType: "onsuccess", target: atlas.control.GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, atlas.GeolocationProperties>) => void): void;
         
+        /**
+         * Adds an event to the `GeolocationControl` once.
+         * @param eventType The event name.
+         * @param target The `GeolocationControl` to add the event for.
+         * @param callback The event handler callback.
+         */
+        addOnce(eventType: "compassheadingchanged", target: atlas.control.GeolocationControl, callback: (e: number) => void): void;
+
         /**
          * Removes an event listener from the `GeolocationControl`.
          * @param eventType The event name.

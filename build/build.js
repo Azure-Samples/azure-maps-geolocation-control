@@ -4,7 +4,7 @@ const path = require("path");
 const { rollup } = require("rollup");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
-const { uglify } = require("rollup-plugin-uglify");
+const { terser } = require("rollup-plugin-terser");
 const ts = require("typescript");
 
 // Configure any functions/properties used by the drawing tools and 
@@ -146,7 +146,7 @@ let rollupError = false;
     // Add uglify to the rollup input plugins.
     // Update the output file path for the minified version.
     rollupOutputOps.file = outMinFilePath;
-    rollupInputOps.plugins.push(uglify());
+    rollupInputOps.plugins.push(terser());
 
     // Rollup minified version.
     console.log("Bundling minified javascript package");

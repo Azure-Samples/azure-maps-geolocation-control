@@ -22,7 +22,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationerror", target: GeolocationControl, callback: (e: PositionError) => void): void;
+        add(eventType: "geolocationerror", target: GeolocationControl, callback: (e: GeolocationPositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl`.
@@ -30,7 +30,15 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        add(eventType: "ongeolocationsuccess", target: GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>) => void): void;
+        add(eventType: "geolocationsuccess", target: GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>) => void): void;
+        
+        /**
+         * Adds an event to the `GeolocationControl`.
+         * @param eventType The event name.
+         * @param target The `GeolocationControl` to add the event for.
+         * @param callback The event handler callback.
+         */
+        add(eventType: "compassheadingchanged", target: GeolocationControl, callback: (e: number) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -38,7 +46,7 @@ declare module "azure-maps-control" {
          * @param target The `GeolocationControl` to add the event for.
          * @param callback The event handler callback.
          */
-        addOnce(eventType: "onerror", target: GeolocationControl, callback: (e: PositionError) => void): void;
+        addOnce(eventType: "onerror", target: GeolocationControl, callback: (e: GeolocationPositionError) => void): void;
 
         /**
          * Adds an event to the `GeolocationControl` once.
@@ -47,6 +55,14 @@ declare module "azure-maps-control" {
          * @param callback The event handler callback.
          */
         addOnce(eventType: "onsuccess", target: GeolocationControl, callback: (e: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>) => void): void;
+        
+        /**
+         * Adds an event to the `GeolocationControl` once.
+         * @param eventType The event name.
+         * @param target The `GeolocationControl` to add the event for.
+         * @param callback The event handler callback.
+         */
+        addOnce(eventType: "compassheadingchanged", target: GeolocationControl, callback: (e: number) => void): void;
         
         /**
          * Removes an event listener from the `GeolocationControl`.

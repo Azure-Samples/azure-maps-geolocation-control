@@ -9,8 +9,16 @@ export interface GeolocationProperties {
     /** The altitudeAccuracy attribute is specified in meters. */
     altitudeAccuracy: number | null;
     
-    /** The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north. */
+    /** The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, 
+     * counting clockwise relative to the true north. This will be either from the geolocation API, and fallback to a calculated value if in 
+     * user tracking mode with  `calculateMissingValues` set to `true`. */
     heading: number | null;
+
+    /** Specifies if the `heading` value came from the geolocation API or was calculated. Null when there is no `heading` value. */
+    headingType: "geolocation" | "calculated" | null;
+
+    /** The heading value of the compass based on the device orientation. */
+    compassHeading: number | null;
     
     /** The latitude position. */
     latitude: number;

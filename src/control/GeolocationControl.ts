@@ -8,7 +8,10 @@ export interface GeolocationControlEvents {
     geolocationsuccess: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
 
     /** Event fired when an error has occured. */
-    geolocationerror: PositionError;
+    geolocationerror: GeolocationPositionError;
+
+    /** Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. */
+    compassheadingchanged: number;
 }
 
  /** A control that uses the browser's geolocation API to locate the user on the map. */
@@ -22,16 +25,18 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
     private _options: GeolocationControlOptions = {
         style: 'light',
         positionOptions: {
-            enableHighAccuracy: false,
-            maximumAge: 0,
-            timeout: 6000 
+            enableHighAccuracy: true,
+            maximumAge: Infinity,
+            timeout: 10000 
         },
         showUserLocation: true,
-        trackUserLocation: false,
+        trackUserLocation: true,
         markerColor: 'DodgerBlue',
         maxZoom: 15,
         calculateMissingValues: false,
-        updateMapCamera: true
+        updateMapCamera: true,
+        enableCompass: true,
+        compassEventThrottleDelay: 100
     };
     private _darkColor = '#011c2c';
     private _hclStyle:azmaps.ControlStyle = null;
@@ -45,6 +50,11 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
     private _isActive = false;
     private _updateMapCamera = true;
     private _lastKnownPosition: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
+    
+    private _lastCompassHeading: number = Number.NaN;
+    private _compassEnabled = false;
+    private _compassUpdateScheduled = false;
+    private _compassEventUpdateScheduled = false;
 
     private static _gpsDotIcon = '<div class="gps-dot" style="background-color:{color}"></div><div class="gps-wedge"><div class="gps-pulse"></div></div>';
 
@@ -60,12 +70,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         '.gps-wedge{width:16px;height:16px;position:absolute;top:0;left:0;z-index:99999;}' +
         '.gps-pulse{width:100%;height:100%;border-radius:50%;background-image: radial-gradient(rgba(30,144,255,1),rgba(30,144,255,0.5));position:absolute;transform-origin:center;transform:scale(2.5);}' +
         '.gps-pulse-animation{animation:gps-pulse-animation-key 2s infinite ease-out;}' +
-        '@keyframes gps-pulse-animation-key { 0% {transform:scale(0.5);opacity:1;} 100% {transform: scale(2.5);opacity:0.5;}}'    
-
-    //When the page is unloaded, stop tracking the user location.
-    private _pageUnload = () => {
-        this._stopTracking();
-    };
+        '@keyframes gps-pulse-animation-key { 0% {transform:scale(0.5);opacity:1;} 100% {transform: scale(2.5);opacity:0.5;}}';    
 
     /****************************
      * Constructor
@@ -79,7 +84,8 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         super();
 
         if (options) {
-            const opt = this._options;
+            const self = this;
+            const opt = self._options;
             if (options.positionOptions) {
                 opt.positionOptions = Object.assign(opt.positionOptions, options.positionOptions);
             }
@@ -110,7 +116,20 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
             if (typeof options.updateMapCamera === 'boolean') {
                 opt.updateMapCamera = options.updateMapCamera;
-                this._updateMapCamera = options.updateMapCamera;
+                self._updateMapCamera = options.updateMapCamera;
+            }           
+
+            if (typeof options.enableCompass === 'boolean') {
+                opt.enableCompass = options.enableCompass;
+                options.enableCompass ? self._enableCompass(): self._disableCompass();
+            }
+
+            if(typeof options.syncMapCompassHeading === 'boolean'){
+                opt.syncMapCompassHeading = options.syncMapCompassHeading;                
+            }
+
+            if(typeof options.compassEventThrottleDelay === 'number' && options.compassEventThrottleDelay >= 100){
+                opt.compassEventThrottleDelay = options.compassEventThrottleDelay;
             }
         }
     }
@@ -230,7 +249,9 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         }
 
         self._map.events.remove('movestart', self._mapMoveStarted);
-        self._map.events.remove('moveend', self._mapMoveEnded);        
+        self._map.events.remove('moveend', self._mapMoveEnded);       
+        
+        self._disableCompass();
 
         if (typeof self._watchId !== 'undefined') {
             navigator.geolocation.clearWatch(self._watchId);
@@ -346,6 +367,29 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                     self._updateState();
                 }
             }
+
+            if(typeof options.enableCompass === 'boolean'){
+                o.enableCompass = options.enableCompass;
+                options.enableCompass ? self._enableCompass(): self._disableCompass();
+
+                //If the compass is not enabled, reset the map heading to 0.
+                if(!o.enableCompass){
+                    self._map.setCamera({ bearing: 0 });
+                }
+            }
+
+            if(typeof options.syncMapCompassHeading === 'boolean'){
+                o.syncMapCompassHeading = options.syncMapCompassHeading;  
+                
+                //If the compass heading syncing is not enabled, reset the map heading to 0.
+                if(!o.syncMapCompassHeading){
+                    self._map.setCamera({ bearing: 0 });
+                }
+            }
+
+            if(typeof options.compassEventThrottleDelay === 'number' && options.compassEventThrottleDelay >= 100){
+                o.compassEventThrottleDelay = options.compassEventThrottleDelay;
+            }
         }
     }
 
@@ -460,18 +504,13 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
             if (self._options.trackUserLocation) {
                 if (typeof self._watchId !== 'number') {
-                    self._watchId = navigator.geolocation.watchPosition(self._onGpsSuccess, () => {
-                        //Fallback to low accuracy results.
-                        navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: false }));
-                    }, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: true }));
+                    self._watchId = navigator.geolocation.watchPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
                 }
 
                 ariaLabel = self._resource[1];
             } else {
                 //True high accuracy first then fall back if needed.
-                navigator.geolocation.getCurrentPosition(self._onGpsSuccess, () => {
-                    navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: false }));
-                }, Object.assign({}, self._options.positionOptions, { enableHighAccuracy: true }));
+                navigator.geolocation.getCurrentPosition(self._onGpsSuccess, self._onGpsError, self._options.positionOptions);
             }           
         } else {
             if (self._options.trackUserLocation) {
@@ -491,7 +530,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Callback for when an error occurs when getting the users location.
      * @param position The GPS position information.
      */
-    private _onGpsSuccess = (position?: Position) => {
+    private _onGpsSuccess = (position?: GeolocationPosition) => {
         const self = this;
         const options = self._options;
         const map = self._map;
@@ -519,7 +558,14 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
                 if(typeof position.coords.heading !== 'number'){
                     geopos.heading = azmaps.math.getHeading(lastKnownPosition.geometry.coordinates, pos);
+                    geopos.headingType = 'calculated';
                 }
+            } else if (!isNaN(geopos.heading)){
+                geopos.headingType = 'geolocation';
+            }
+
+            if(!isNaN(self._lastCompassHeading)) {
+                geopos.compassHeading = self._lastCompassHeading;
             }
 
             lastKnownPosition = new azmaps.data.Feature(new azmaps.data.Point(pos), geopos);
@@ -572,6 +618,11 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                         opt.zoom = 15;
                     }
 
+                    //Rotate the map to align with the compass heading.
+                    if(self._options.syncMapCompassHeading && !isNaN(self._lastCompassHeading)) {
+                        opt.bearing = self._lastCompassHeading;
+                    }
+
                     map.setCamera(opt);
                 }
             }
@@ -584,12 +635,9 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      * Callback for when an error occurs when getting the users location.
      * @param error The error that occured.
      */
-    private _onGpsError = (error: PositionError) => {
-        const self = this;
-        self._watchId = null;
-        self._isActive = false;
-        self._updateState();
-        self._invokeEvent('geolocationerror', error);
+    private _onGpsError = (error: GeolocationPositionError) => {
+        //Don't do anything other than report the error. Often it will be that there was a timeout when getting the users location.
+        this._invokeEvent('geolocationerror', error);
     }
 
     /** Generates the mark icon HTML */
@@ -600,36 +648,183 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         return icon;
     }
 
+    /**
+     * Updates the marker heading based on the last known compass heading.
+     */
     private _updateMarkerHeading(): void {
         const self = this;
-        let h = self._lastKnownPosition.properties.heading;
-        let clipPath = 'none';
-        let animate = true;
-        
-        if (!isNaN(h)) {
-            h = Math.round(h);
-            //@ts-ignore
-            self._gpsMarker.marker.setRotation(h);
-            clipPath = 'polygon(50% 50%, 0% 0%, 100% 0%)';
-            animate = false;
-        }
 
-        //@ts-ignore
-        const gpsPluseElm = self._gpsMarker.getOptions().htmlContent.querySelector('.gps-pulse');
+        if(self._gpsMarker){
+            let h = self._lastCompassHeading;
+            let clipPath = 'none';
+            let animate = true;
 
-        gpsPluseElm.style.clipPath = clipPath;
+            if(isNaN(h)){
+                const props = self._lastKnownPosition.properties;
+                const h2 = props.heading;
 
-        const animationClass = 'gps-pulse-animation';        
-        const cl = gpsPluseElm.classList;
-        const hasClass = cl.contains(animationClass);
-        if(animate) {
-            if(!hasClass){
-                cl.add(animationClass);
+                //If a heading value is set and is either from the geolocation API, or calculated when in user tracking mode, use that.
+                if(!isNaN(h2) && (props.headingType === 'geolocation' || (self._options.trackUserLocation && self._options.calculateMissingValues))){
+                    h = h2;
+                }
             }
-        } else if(hasClass){
-            cl.remove(animationClass);
+            
+            if (!isNaN(h)) {
+                h = Math.round(h);
+                //@ts-ignore
+                self._gpsMarker.marker.setRotation(h);
+                clipPath = 'polygon(50% 50%, 0% 0%, 100% 0%)';
+                animate = false;
+            }
+
+            //@ts-ignore
+            const gpsPluseElm = self._gpsMarker.getOptions().htmlContent.querySelector('.gps-pulse');
+
+            gpsPluseElm.style.clipPath = clipPath;
+
+            const animationClass = 'gps-pulse-animation';        
+            const cl = gpsPluseElm.classList;
+            const hasClass = cl.contains(animationClass);
+            if(animate) {
+                if(!hasClass){
+                    cl.add(animationClass);
+                }
+            } else if(hasClass){
+                cl.remove(animationClass);
+            }
         }
     }
+
+    /**
+     * Enable the compass by adding the event listener for device orientation changes.
+     */
+    private _enableCompass(): void {
+        const self = this;
+
+        if(!self._compassEnabled) {
+            if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', self._onOrientationChanged, false);
+            } else if ('ondeviceorientation' in window &&
+            ('DeviceOrientationEvent' in window && 'webkitCompassHeading' in DeviceOrientationEvent.prototype)) {
+                //@ts-ignore
+                window.addEventListener('deviceorientation', self._onOrientationChanged, false);
+            }
+
+            self._compassEnabled = true;
+        }
+    }
+
+    /**
+     * Disables the compass by removing the event listener for device orientation changes.
+     */
+    private _disableCompass(): void {
+        const self = this;
+
+        if(self._compassEnabled) {
+            if ('ondeviceorientationabsolute' in window) {
+                window.removeEventListener('deviceorientationabsolute', self._onOrientationChanged, false);
+            } else if ('ondeviceorientation' in window &&
+            ('DeviceOrientationEvent' in window && 'webkitCompassHeading' in DeviceOrientationEvent.prototype)) {
+                //@ts-ignore
+                window.removeEventListener('deviceorientation', self._onOrientationChanged, false);
+            }
+        }
+
+        self._compassEnabled = false;
+        self._lastCompassHeading = Number.NaN;
+    }
+
+    /**
+     * An event handler for when the device orientation changes. This is used to update the compass heading.
+     * @param e The device orientation event.
+     */
+    private _onOrientationChanged = (e: DeviceOrientationEvent) => {
+        const self = this;
+
+        //Check to see if there is an update already scheduled. If so, ignore this event (throttle).
+        if(!self._compassEventUpdateScheduled || !self._compassUpdateScheduled){
+            let h = null;
+
+            if (e.absolute) {
+                //Calculate the compass heading based on the device orientation using Euler angles.
+                h = self._eulerAnglesToCompassHeading(e.alpha, e.beta, e.gamma);
+            }             
+            //@ts-ignore
+            else if (e.webkitCompassHeading) {
+                //@ts-ignore
+                h = e.webkitCompassHeading;
+            }
+
+            if(!isNaN(h)) {                
+                self._lastCompassHeading = h;
+                
+                if(!self._compassUpdateScheduled){
+                    self._compassUpdateScheduled = true;
+
+                    //Update the marker heading no faster than every 100ms.
+                    setTimeout(() => {
+                        //Rotate the map to align with the compass heading.
+                        if(self._options.syncMapCompassHeading) {
+                            self._map.setCamera({ bearing: self._lastCompassHeading });
+                        }
+
+                        self._updateMarkerHeading();
+                        self._compassUpdateScheduled = false;
+                    }, 100);
+                }
+
+                if(!self._compassEventUpdateScheduled){
+                    self._compassEventUpdateScheduled = true;
+
+                    //Throttle.
+                    setTimeout(() => {
+                        self._invokeEvent('compassheadingchanged', h);
+                        self._compassEventUpdateScheduled = false;
+                    }, self._options.compassEventThrottleDelay);
+                }
+            } 
+        }
+    }
+
+    /**
+     * Computes the compass-heading from the device-orientation euler-angles.
+     * Source: https://w3c.github.io/deviceorientation/#example-cad08fa0
+     */
+    private _eulerAnglesToCompassHeading(alpha: number | null, beta: number | null, gamma: number | null): number {
+        const degtorad = Math.PI / 180;
+
+        const _x = beta  ? beta  * degtorad : 0; // beta value
+        const _y = gamma ? gamma * degtorad : 0; // gamma value
+        const _z = alpha ? alpha * degtorad : 0; // alpha value
+    
+        const cY = Math.cos(_y);
+        const cZ = Math.cos(_z);
+        const sX = Math.sin(_x);
+        const sY = Math.sin(_y);
+        const sZ = Math.sin(_z);
+    
+        // Calculate Vx and Vy components
+        const Vx = -cZ * sY - sZ * sX * cY;
+        const Vy = -sZ * sY + cZ * sX * cY;
+    
+        // Calculate compass heading
+        let compassHeading = Math.atan(Vx / Vy);
+    
+        // Convert compass heading to use whole unit circle
+        if (Vy < 0) {
+        compassHeading += Math.PI;
+        } else if (Vx < 0) {
+        compassHeading += 2 * Math.PI;
+        }
+    
+        return compassHeading * (180 / Math.PI); // Compass Heading (in degrees)
+    }
+    
+    //When the page is unloaded, stop tracking the user location.
+    private _pageUnload = () => {
+        this._stopTracking();
+        this._disableCompass();
+    };
 
     /**
      * Returns the set of translation text resources needed for the control for a given language.

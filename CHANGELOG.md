@@ -1,5 +1,18 @@
 ## azure-maps-geolocation-control Changelog
 
+<a name="0.0.4"></a>
+# 0.0.4 (2025-04-04)
+
+**Features**
+
+- Added support for compass by leveraging device orientation information. Marker indicates the compass direction when enabled.
+- Added options for sycing the map rotation with the compass heading.
+- Added a throttled event for when compass heading changes. This event can fire frequently so limited event trigger to once per 100ms at max which is sufficient for most UI scenarios.
+
+**Bug fixes**
+
+- Updated packages and build scripts to address `npm install` issues.
+
 <a name="0.0.3"></a>
 # 0.0.3 (2025-04-04)
 

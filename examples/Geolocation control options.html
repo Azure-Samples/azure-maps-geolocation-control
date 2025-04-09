@@ -11,8 +11,8 @@
     <meta name="author" content="Microsoft Azure Maps" />
 
     <!-- Add references to the Azure Maps Map control JavaScript and CSS files. -->
-    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css" />
-    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.css" type="text/css" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.js"></script>
 
     <!-- Add reference to the geolocation control module. -->
     <script src="../dist/azure-maps-geolocation-control.min.js"></script>
@@ -39,6 +39,9 @@
                 //Add events to the control.
                 map.events.add('geolocationerror', geolocationControl, displayEventInfo);
                 map.events.add('geolocationsuccess', geolocationControl, displayEventInfo);
+                map.events.add('compassheadingchanged', geolocationControl, (e) => {
+                    displayEventInfo(`Compass heading: ${e}`);
+                });
 
                 //Add control and a style control to the map.
                 map.controls.add([new atlas.control.StyleControl(), geolocationControl], {
@@ -64,7 +67,11 @@
                     timeout: parseFloat(document.getElementById('timeout').value)
                 },
                 calculateMissingValues: document.getElementById('calculateMissingValues').checked,
-                maxZoom: parseFloat(document.getElementById('maxZoom').value)
+                maxZoom: parseFloat(document.getElementById('maxZoom').value),
+
+                enableCompass: document.getElementById('enableCompass').checked,
+                compassEventThrottleDelay: parseFloat(document.getElementById('compassEventThrottleDelay').value),
+                syncMapCompassHeading: document.getElementById('syncMapCompassHeading').checked
             });
         }      
 
@@ -104,8 +111,8 @@
         }
 
         #eventInfo {
-            width: 300px;
-            height: 420px;
+            width: 290px;
+            height: 370px;
             overflow-y: auto;
         }
 
@@ -139,6 +146,8 @@
             padding: 6px 12px;
             border: 1px solid #ccc;
             border-top: none;
+            overflow-y: auto;
+            max-height: 400px;
         }
     </style>
 </head>
@@ -174,6 +183,23 @@
                     <td>Track user location:</td>
                     <td><input id="trackUserLocation" type="checkbox" onclick="update()" /></td>
                 </tr>
+                <tr>
+                    <td>Enable Compass</td>
+                    <td><input id="enableCompass" type="checkbox" checked="true" onclick="update()" /></td>
+                </tr>
+                <tr>
+                    <td>Sync Map Compass Heading</td>
+                    <td><input id="syncMapCompassHeading" type="checkbox" onclick="update()" /></td>
+                </tr>
+                <tr>
+                    <td>Compass Event Throttle Delay</td>
+                    <td>
+                        <form oninput="ceth.value=compassEventThrottleDelay.value">
+                            <input type="range" id="compassEventThrottleDelay" value="100" min="0" max="5000" step="100" onchange="update()" />
+                            <output name="ceth" for="compassEventThrottleDelay">100</output>
+                        </form>
+                    </td>
+                </tr>
                 <tr title="Specifies that if the speed or heading values are missing in the geolocation position, it will calculate these values based on the last known position.">
                     <td>Calculate missing values:</td>
                     <td><input id="calculateMissingValues" type="checkbox" onclick="update()" /></td>
@@ -197,14 +223,14 @@
                 </tr>
                 <tr>
                     <td>Position option: Enable high accuracy</td>
-                    <td><input id="enableHighAccuracy" type="checkbox" onclick="update()" /></td>
+                    <td><input id="enableHighAccuracy" type="checkbox" checked="true" onclick="update()" /></td>
                 </tr>
                 <tr>
                     <td>Position option: Maximum Age</td>
                     <td>
                         <form oninput="maxa.value=maximumAge.value">
-                            <input type="range" id="maximumAge" value="0" min="0" max="60000" step="100" onchange="update()" />
-                            <output name="maxa" for="maximumAge">0</output>
+                            <input type="range" id="maximumAge" value="60000" min="0" max="60000" step="100" onchange="update()" />
+                            <output name="maxa" for="maximumAge">60000</output>
                         </form>
                     </td>
                 </tr>
@@ -212,8 +238,8 @@
                     <td>Position option: Timeout</td>
                     <td>
                         <form oninput="to.value=timeout.value">
-                            <input type="range" id="timeout" value="6000" min="0" max="60000" step="100" onchange="update()" />
-                            <output name="to" for="timeout">0</output>
+                            <input type="range" id="timeout" value="10000" min="0" max="60000" step="100" onchange="update()" />
+                            <output name="to" for="timeout">10000</output>
                         </form>
                     </td>
                 </tr>

@@ -44,6 +44,10 @@ map.events.add('geolocationerror', gc, function(arg){
     //Do something.
 });
 
+map.events.add('compassheadingchanged', gc, function(heading){
+    //Do something.
+});
+
 //Add the geolocation control to the map.
 map.controls.add(gc, {
     position: 'top-right'
@@ -91,7 +95,8 @@ Namespace: `atlas.control`
 
 | Name | Return type | Description |
 |------|-------------|-------------|
-| `geolocationerror` | `PositionError` | Event fired when an error has occured. Returns the error from the geolcation API as per the [GeolocationPositionError specificaiton](https://w3c.github.io/geolocation-api/#position_error_interface).  |
+| `compassheadingchanged` | `number` | Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. |
+| `geolocationerror` | `GeolocationPositionError` | Event fired when an error has occured. Returns the error from the geolcation API as per the [GeolocationPositionError specificaiton](https://w3c.github.io/geolocation-api/#position_error_interface).  |
 | `geolocationsuccess` | `atlas.data.Feature<atlas.data.Point, GeolocationProperties>` | Event fired when user position is successful captured or updated. |
 
 ### GeolocationControlOptions interface
@@ -103,11 +108,14 @@ Options for the GeolocationControl.
 | Name | Type | Description |
 |------|------|-------------|
 | `calculateMissingValues` | `boolean` | Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` |
+| `compassEventThrottleDelay` | `number` | The delay in milliseconds between compass events. The compass heading value can change very rapidly with the slightest movement of a device which can negatively impact applications where heavy computations or UI changes occur due to the event. This options throttles how frequently the event will fire. Only values greater or equal to `100` are accepted. The marker direction updates independantly of this option. Default: `100` |
+| `enableCompass` | `boolean` | Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` |
 | `markerColor` | `string` | The color of the user location marker. Default: `DodgerBlue` |
 | `maxZoom` | `number` | The maximum zoom level the map can be zoomed out. If zoomed out more than this when location updates, the map will zoom into this level. If zoomed in more than this level, the map will maintain its current zoom level. Default: `15` |
 | `positionOptions` | `PositionOptions` | A [Geolocation API PositionOptions](https://w3c.github.io/geolocation-api/#position_options_interface) object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` |
 | `showUserLocation` | `boolean` | Shows the users location on the map using a marker. Default: `true` |
 | `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light`. |
+| `syncMapCompassHeading` | `boolean` | Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` |
 | `trackUserLocation` | `boolean` | If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` |
 | `updateMapCamera` | `boolean` | Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` |
 
@@ -122,7 +130,9 @@ Properties of returned for a geolocation point.
 | `accuracy` | `number` | The accuracy attribute denotes the accuracy level of the latitude and longitude coordinates.  |
 | `altitude` | `number` \| `null` | The altitude height of the position, specified in meters above the [WGS84] ellipsoid. |
 | `altitudeAccuracy` | `number` \| `null` | The altitudeAccuracy attribute is specified in meters. |
-| `heading` | `number` \| `null` | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north. |
+| `compassHeading` | `number` \| `null` | The heading value of the compass based on the device orientation. |
+| `heading` | `number` \| `null` | The heading attribute denotes the direction of travel of the hosting device and is specified in degrees, where 0° ≤ heading < 360°, counting clockwise relative to the true north. This will be either from the geolocation API, and fallback to a calculated value if in user tracking mode with  `calculateMissingValues` set to `true`. |
+| `headingType` | `'calculated'` \| `'geolocation'` \| `null` | Specifies if the `heading` value came from the geolocation API or was calculated. Null when there is no `heading` value. |
 | `latitude` | `number` | The latitude position. |
 | `longitude` | `number`| The longitude position. |
 | `speed` | `number` \| `null` | The speed attribute denotes the magnitude of the horizontal component of the hosting device's current velocity and is specified in meters per second. |
@@ -133,7 +143,6 @@ Properties of returned for a geolocation point.
 
 * [Azure Maps Web SDK Open modules](https://github.com/microsoft/Maps/blob/master/AzureMaps.md#open-web-sdk-modules) - A collection of open source modules that extend the Azure Maps Web SDK.
 * [Azure Maps Web SDK Samples](https://github.com/Azure-Samples/AzureMapsCodeSamples)
-* [Azure Maps Gov Cloud Web SDK Samples](https://github.com/Azure-Samples/AzureMapsGovCloudCodeSamples)
 * [Azure Maps & Azure Active Directory Samples](https://github.com/Azure-Samples/Azure-Maps-AzureAD-Samples)
 * [List of open-source Azure Maps projects](https://github.com/microsoft/Maps/blob/master/AzureMaps.md)
 
