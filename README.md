@@ -95,9 +95,20 @@ Namespace: `atlas.control`
 
 | Name | Return type | Description |
 |------|-------------|-------------|
-| `compassheadingchanged` | `number` | Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. |
-| `geolocationerror` | `GeolocationPositionError` | Event fired when an error has occured. Returns the error from the geolcation API as per the [GeolocationPositionError specificaiton](https://w3c.github.io/geolocation-api/#position_error_interface).  |
-| `geolocationsuccess` | `atlas.data.Feature<atlas.data.Point, GeolocationProperties>` | Event fired when user position is successful captured or updated. |
+| `compassheadingchanged` | `GeolocationControlEventArgs` | Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. |
+| `geolocationerror` | `GeolocationControlEventArgs` | Event fired when an error has occured. Returns the error from the geolcation API as per the [GeolocationPositionError specificaiton](https://w3c.github.io/geolocation-api/#position_error_interface).  |
+| `geolocationsuccess` | `GeolocationControlEventArgs` | Event fired when user position is successful captured or updated. |
+
+### GeolocationControlEventArgs interface
+
+ Event arg object for the Geolocation control.
+
+| Name | Return type | Description |
+|------|-------------|-------------|
+| `type` | `'geolocationerror'` \| `'geolocationsuccess'` \| `'compassheadingchanged'` | The type of event that fired. |
+| `error` | `GeolocationPositionError` | Error information from the Geolocation API. |
+| `feature` | `atlas.data.Feature<atlas.data.Point, GeolocationProperties>` | The position of the user. Set on geolocation success. Last known value will be included with the compass heading changed event. |
+| `compassHeading` | `number` | The compass heading. Set when the compass heading changes or when there is a last known compass heading when there is a geolocation success. |
 
 ### GeolocationControlOptions interface
 
@@ -109,7 +120,7 @@ Options for the GeolocationControl.
 |------|------|-------------|
 | `calculateMissingValues` | `boolean` | Specifies that if the `speed` or `heading` values are missing in the geolocation position, it will calculate these values based on the last known position. Default: `false` |
 | `compassEventThrottleDelay` | `number` | The delay in milliseconds between compass events. The compass heading value can change very rapidly with the slightest movement of a device which can negatively impact applications where heavy computations or UI changes occur due to the event. This options throttles how frequently the event will fire. Only values greater or equal to `100` are accepted. The marker direction updates independantly of this option. Default: `100` |
-| `enableCompass` | `boolean` | Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` |
+| `enableCompass` | `boolean` | Specifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` |
 | `markerColor` | `string` | The color of the user location marker. Default: `DodgerBlue` |
 | `maxZoom` | `number` | The maximum zoom level the map can be zoomed out. If zoomed out more than this when location updates, the map will zoom into this level. If zoomed in more than this level, the map will maintain its current zoom level. Default: `15` |
 | `positionOptions` | `PositionOptions` | A [Geolocation API PositionOptions](https://w3c.github.io/geolocation-api/#position_options_interface) object. Default: `{ enableHighAccuracy : false , timeout : 6000 }` |

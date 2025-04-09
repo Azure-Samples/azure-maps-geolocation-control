@@ -12,7 +12,7 @@ export interface GeolocationControlOptions {
      * The marker direction updates independantly of this option. Default: `100` */
     compassEventThrottleDelay?: number;
 
-    /** Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
+    /** Specifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
     enableCompass?: boolean;
 
     /** The color of the user location marker. Default: `DodgerBlue` */

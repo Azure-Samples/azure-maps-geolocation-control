@@ -2,16 +2,31 @@ import * as azmaps from "azure-maps-control";
 import { GeolocationControlOptions } from './GeolocationControlOptions';
 import { GeolocationProperties } from './GeolocationProperties';
 
+/** Event arg object for the Geolocation control. */
+export interface GeolocationControlEventArgs {
+    /** The type of event that fired. */
+    type: 'geolocationerror' | 'geolocationsuccess' | 'compassheadingchanged';
+
+    /** Error information from the Geolocation API. */
+    error?: GeolocationPositionError;
+
+    /** The position of the user. Set on geolocation success. Last known value will be included with the compass heading changed event. */
+    feature?: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
+
+    /** The compass heading. Set when the compass heading changes or when there is a last known compass heading when there is a geolocation success. */
+    compassHeading?: number;
+}
+
 /** The events supported by the `GeolocationControl`. */
 export interface GeolocationControlEvents {
     /** Event fired when user position is successful captured or updated. */
-    geolocationsuccess: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
+    geolocationsuccess: GeolocationControlEventArgs;
 
     /** Event fired when an error has occured. */
-    geolocationerror: GeolocationPositionError;
+    geolocationerror: GeolocationControlEventArgs;
 
     /** Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. */
-    compassheadingchanged: number;
+    compassheadingchanged: GeolocationControlEventArgs;
 }
 
  /** A control that uses the browser's geolocation API to locate the user on the map. */
@@ -217,11 +232,14 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 //Device doesn't support getting position.
                 //@ts-ignore
                 self._invokeEvent('geolocationerror', {
-                    code: 2,
-                    message: 'Geolocation API not supported by device.',
-                    PERMISSION_DENIED: 1,
-                    POSITION_UNAVAILABLE: 2,
-                    TIMEOUT: 3
+                    type: 'geolocationerror',
+                    error: {
+                        code: 2,
+                        message: 'Geolocation API not supported by device.',
+                        PERMISSION_DENIED: 1,
+                        POSITION_UNAVAILABLE: 2,
+                        TIMEOUT: 3
+                    }
                 });
             }
         });
@@ -627,7 +645,16 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 }
             }
 
-            self._invokeEvent('geolocationsuccess', lastKnownPosition);
+            const args: GeolocationControlEventArgs = {
+                type: 'geolocationsuccess',
+                feature: lastKnownPosition,
+            };
+
+            if(!isNaN(self._lastCompassHeading)) {
+                args.compassHeading = self._lastCompassHeading;
+            }
+
+            self._invokeEvent('geolocationsuccess', args);
         }
     };
 
@@ -637,7 +664,10 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
      */
     private _onGpsError = (error: GeolocationPositionError) => {
         //Don't do anything other than report the error. Often it will be that there was a timeout when getting the users location.
-        this._invokeEvent('geolocationerror', error);
+        this._invokeEvent('geolocationerror', {
+            type: 'geolocationerror',
+            error: error
+        });
     }
 
     /** Generates the mark icon HTML */
@@ -778,7 +808,16 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
                     //Throttle.
                     setTimeout(() => {
-                        self._invokeEvent('compassheadingchanged', h);
+                        const args: GeolocationControlEventArgs = {
+                            type: 'compassheadingchanged',
+                            compassHeading: h
+                        };
+            
+                        if(self._lastKnownPosition) {
+                            args.feature = self._lastKnownPosition;
+                        }
+
+                        self._invokeEvent('compassheadingchanged', args);
                         self._compassEventUpdateScheduled = false;
                     }, self._options.compassEventThrottleDelay);
                 }

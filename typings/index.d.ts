@@ -4,16 +4,31 @@ declare namespace atlas {
 
     export module control {
 
+       /** Event arg object for the Geolocation control. */
+        export interface GeolocationControlEventArgs {
+            /** The type of event that fired. */
+            type: 'geolocationerror' | 'geolocationsuccess' | 'compassheadingchanged';
+
+            /** Error information from the Geolocation API. */
+            error?: GeolocationPositionError;
+
+            /** The position of the user. Set on geolocation success. Last known value will be included with the compass heading changed event. */
+            feature?: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
+
+            /** The compass heading. Set when the compass heading changes or when there is a last known compass heading when there is a geolocation success. */
+            compassHeading?: number;
+        }
+
         /** The events supported by the `GeolocationControl`. */
         export interface GeolocationControlEvents {
             /** Event fired when user position is successful captured or updated. */
-            geolocationsuccess: azmaps.data.Feature<azmaps.data.Point, GeolocationProperties>;
-        
+            geolocationsuccess: GeolocationControlEventArgs;
+
             /** Event fired when an error has occured. */
-            geolocationerror: GeolocationPositionError;
+            geolocationerror: GeolocationControlEventArgs;
 
             /** Event fired when the compass heading changes. Returns a compass heading in degrees where North = 0, East = 90, South = 180, West = 270. This event may be fired a lot and is throttled by default at 100ms. */
-            compassheadingchanged: number;
+            compassheadingchanged: GeolocationControlEventArgs;
         }
 
         /** A control that uses the browser's geolocation API to locate the user on the map. */
@@ -93,7 +108,7 @@ declare namespace atlas {
         /** Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` */
         updateMapCamera?: boolean;
 
-        /** Soecifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
+        /** Specifies if the compass should be enabled, if available. Based on the device orientation. Default: `true` */
         enableCompass?: boolean;
     
         /** Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` */
