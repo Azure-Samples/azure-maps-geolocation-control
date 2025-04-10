@@ -317,6 +317,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
         const o = self._options;
 
         if (options) {
+            let trackingChanged = false;
             if(options.style){
                 let color = 'white';
 
@@ -382,10 +383,6 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
                 }
             }
 
-            if (typeof options.trackUserLocation === 'boolean') {
-                o.trackUserLocation = options.trackUserLocation;
-            }
-
             if (options.positionOptions) {
                 let opt: PositionOptions = {};
 
@@ -403,8 +400,7 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
                 if (Object.keys(opt).length > 0) {
                     o.positionOptions = Object.assign(o.positionOptions, opt);
-                    self._stopTracking();
-                    self._updateState();
+                    trackingChanged = true;
                 }
             }
 
@@ -429,6 +425,16 @@ export class GeolocationControl extends azmaps.internal.EventEmitter<Geolocation
 
             if(typeof options.compassEventThrottleDelay === 'number' && options.compassEventThrottleDelay >= 100){
                 o.compassEventThrottleDelay = options.compassEventThrottleDelay;
+            }
+
+            if (typeof options.trackUserLocation === 'boolean') {
+                o.trackUserLocation = options.trackUserLocation;
+                trackingChanged = true;
+            }
+
+            if(o.trackUserLocation && trackingChanged) {
+                self._stopTracking();
+                self._updateState();
             }
         }
     }

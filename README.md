@@ -127,7 +127,7 @@ Options for the GeolocationControl.
 | `showUserLocation` | `boolean` | Shows the users location on the map using a marker. Default: `true` |
 | `style` | `atlas.ControlStyle` \| `string` | The style of the control. Can be; `light`, `dark`, `auto`, or any CSS3 color. When set to auto, the style will change based on the map style. Overridden if device is in high contrast mode. Default `light`. |
 | `syncMapCompassHeading` | `boolean` | Specifies if the map should rotate to sync it's heading with the compass. Based on the device orientation. Default: `false` |
-| `trackUserLocation` | `boolean` | If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Default: `false` |
+| `trackUserLocation` | `boolean` | If `true` the geolocation control becomes a toggle button and when active the map will receive updates to the user's location as it changes. Be sure to set the `maximumAge` of the `postionOptions` to a smaller number to increase the update frequency. Default: `false` |
 | `updateMapCamera` | `boolean` | Specifies if the map camera should update as the position moves. When set to `true`, the map camera will update to the new position, unless the user has interacted with the map. Default: `true` |
 
 ### GeolocationProperties interface
