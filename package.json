@@ -5,10 +5,9 @@
   "keywords": [
     "azure",
     "maps",
-    "animations",
-    "animate",
-    "lbs",
-    "microsoft"
+    "microsoft",
+    "geolocation",
+    "gps"
   ],
   "bugs": {
     "url": "https://github.com/Azure-Samples/azure-maps-geolocation-control/issues"
